@@ -1,0 +1,29 @@
+apiVersion: v2
+name: helmCharts
+version: 0.0.1
+kubeVersion: ">= 1.18.0-0"
+description: Universal Helm chart template to be used for all future Helm deployments
+type: application
+home: https://github.com/SamsonChen94/helm-charts
+maintainers:
+  - name: Samson Chen
+    email: samsonchen1260@gmail.com
+icon: https://helm.sh/img/helm.svg
+appVersion: ""
+deprecated: false
+# keywords:
+#   -
+# sources:
+#   -
+# dependencies:
+#   - name: The name of the chart (nginx)
+#     version: The version of the chart ("1.2.3")
+#     repository: The repository URL ("https://example.com/charts") or alias ("@repo-name")
+#     condition: (optional) A yaml path that resolves to a boolean, used for enabling/disabling charts (e.g. subchart1.enabled )
+#     tags: # (optional)
+#       - Tags can be used to group charts for enabling/disabling together
+#     import-values: # (optional)
+#       - ImportValues holds the mapping of source values to parent key to be imported. Each item can be a string or pair of child/parent sublist items.
+#     alias: (optional) Alias to be used for the chart. Useful when you have to add the same chart multiple times
+# annotations:
+#   example: A list of annotations keyed by name (optional).
