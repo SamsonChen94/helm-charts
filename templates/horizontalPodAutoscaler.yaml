@@ -1,0 +1,52 @@
+{{- if .Values.autoscaling }}
+{{- if .Values.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  labels:
+    app: {{ template "fullname" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+  name: {{ template "fullname" . }}-autoscaling
+  namespace: {{ .Release.Namespace }}
+spec:
+  maxReplicas: {{ .Values.autoscaling.max | default 2 }}
+  minReplicas: {{ .Values.autoscaling.min | default 2 }}
+  metrics:
+    {{- range $values := .Values.autoscaling.scaleBy }}
+    {{- if or ( eq $values.metric "cpu" ) ( eq $values.metric "memory" ) }}
+    - resource:
+        name: {{ required "\n\nError --> autoscaling.scaleBy.*.metric required. Supported values: cpu, memory, pubsub\n" $values.metric }}
+        target:
+          {{- $require := required "\n\nError --> autoscaling.scaleBy.*.type required\n" $values.type }}
+          {{- if eq $values.type "Utilization" }}
+          averageUtilization: {{ required "\n\nError --> autoscaling.scaleBy.*.target required\n" $values.target }}
+          {{- else if eq $values.type "AverageValue" }}
+          averageValue: {{ required "\n\nError --> autoscaling.scaleBy.*.target required\n" $values.target }}
+          {{- else }}
+          {{- fail "\n\nError --> Invalid autoscaling.scaleBy.*.type. Supported values: Utilization and AverageValue\n" }}
+          {{- end }}
+          type: {{ required "\n\nError --> autoscaling.scaleBy.*.type required. Supported values: Utilization and AverageValue\n" $values.type }}
+      type: Resource
+    {{- else if eq $values.metric "pubsub" }}
+    - external:
+        metric:
+          name: pubsub.googleapis.com|subscription|num_undelivered_messages
+          selector:
+            matchLabels:
+              resource.labels.topic_id: {{ required "\n\nError --> metricLabelValue is required when using pubsub metric type\n" $values.metricLabelValue }}
+        target:
+          type: AverageValue
+          averageValue: {{ required "\n\nError --> autoscaling.scaleBy.*.target required\n" $values.target }}
+      type: External
+    {{- else if eq $values.metric "time" }}
+    {{- else }}
+    {{- fail "\n\nError --> Invalid autoscaling.scaleBy.*.metric. Supported values: cpu, memory, pubsub\n" }}
+    {{- end }}
+    {{- end }}
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ template "fullname" . }}-deploy
+{{- end }}
+{{- end }}

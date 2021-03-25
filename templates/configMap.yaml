@@ -1,0 +1,53 @@
+{{- $cronJobMounting := false }}
+{{- $cronJobMountList := (list) }}
+{{- if .Values.cron }}
+{{- if .Values.cron.enabled }}
+{{- range $values := .Values.cron.jobs }}
+{{- if $values.mountList }}
+{{- $cronJobMounting = true }}
+{{- $cronJobMountList = $values.mountList }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- $configMounting := false }}
+{{- if .Values.config }}
+{{- if .Values.config.enabled }}
+{{- if not .Values.config.files }}
+{{- fail "\n\nError --> config.files cannot be empty if config.enabled is true\n"}}
+{{- end }}
+{{- $configMounting = true }}
+{{- end }}
+{{- end }}
+{{- if or $cronJobMounting $configMounting }}
+apiVersion: v1
+data:
+  {{- $mountingList := (list) }}
+  {{- if $cronJobMounting }}
+  {{- $mountingList = concat $mountingList $cronJobMountList }}
+  {{- end }}
+  {{- if $configMounting }}
+  {{- $mountingList = concat $mountingList .Values.config.files }}
+  {{- end }}
+  {{- range $values := $mountingList }}
+  {{- $fileExists := false }}
+  {{- range $path, $bytes := $.Files.Glob "configs/**" }}
+  {{- $filename := split "/" $path }}
+  {{- if eq $filename._1 $values }}
+  {{- $fileExists = true }}
+  {{ $filename._1 }}: {{ tpl ( toYaml ( $.Files.Get $path ) ) $ | indent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- if not $fileExists }}
+  {{- fail ( printf "\n\nError --> %s does not exist in configs directory\n" $values ) }}
+  {{- end }}
+  {{- end }}
+kind: ConfigMap
+metadata:
+  labels:
+    app: {{ template "fullname" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+  name: {{ template "fullname" . }}-cm
+  namespace: {{ .Release.Namespace }}
+{{- end }}

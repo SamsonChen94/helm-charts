@@ -1,0 +1,52 @@
+{{- if not .Values.networking }}
+{{- fail "\n\nError --> networking is a required field for all helm deployments\n" }}
+{{- end }}
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    cloud.google.com/backend-config: '{"default": "{{ template "fullname" . }}-bc"}'
+    {{- if eq .Values.networking.serviceType "InternalLoadBalancer" }}
+    cloud.google.com/load-balancer-type: "Internal"
+    {{- end }}
+    # TODO: prometheus.io/scrape annotations
+    # prometheus.io/scrape: true
+    # prometheus.io/port: 9090
+    # prometheus.io/path: metrics
+  labels:
+    app: {{ template "fullname" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+  name: {{ template "fullname" . }}-svc
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- if and ( eq .Values.networking.serviceType "ClusterIP" ) .Values.networking.headless }}
+  clusterIP: None
+  {{- end }}
+  ports:
+    {{- range $ports := .Values.networking.portMappings }}
+    {{- if not ( regexMatch "^[0-9]+(:[0-9]*)?(/(tcp|udp))?$" $ports ) }}
+    {{- fail ( printf "\n\nError --> Invalid portMapping for %s. It should be in the form '<CONTAINERPORT>:<SERVICEPORT>/[tcp|udp]'" $ports ) }}
+    {{- end }}
+    {{- $containerPort := regexSplit ":" $ports -1 | first }}
+    {{- $protocol := last ( regexSplit "/" $ports -1 ) }}
+    {{- if and ( not ( eq $protocol "tcp" ) ) ( not ( eq $protocol "udp" ) ) }}
+    {{- $protocol = "tcp" }}
+    {{- end }}
+    {{- $servicePort := regexSplit "/" ( regexSplit ":" $ports -1 | last ) -1 | first }}
+    {{- if eq $servicePort "" }}
+    {{- $servicePort = $containerPort }}
+    {{- end }}
+    - port: {{ $servicePort }}
+      protocol: {{ $protocol | upper }}
+      targetPort: {{ $containerPort }}
+    {{- end }}
+  selector:
+    app: {{ template "fullname" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+  {{- if eq .Values.networking.serviceType "InternalLoadBalancer" }}
+  type: LoadBalancer
+  {{- else }}
+  type: {{ required "\n\nError --> serviceType is required\n" .Values.networking.serviceType }}
+  {{- end }}

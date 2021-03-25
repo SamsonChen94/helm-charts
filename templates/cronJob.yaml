@@ -1,0 +1,104 @@
+{{- if .Values.cron }}
+{{- if .Values.cron.enabled }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    app: {{ template "fullname" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+  name: {{ template "fullname" . }}-cj
+  namespace: {{ .Release.Namespace }}
+spec:
+  failedJobsHistoryLimit: 0
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: {{ template "fullname" . }}
+            chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+            release: {{ .Release.Name }}
+        spec:
+          {{- $volumeMounting := false }}
+          containers:
+            {{- range $values := .Values.cron.jobs }}
+            - args:
+                {{- $require := required "\n\nError --> missing 'execute' in cron.jobs\n" $values.execute }}
+                {{- range $executeList := $values.execute }}
+                - {{ $executeList | replace "NAMESPACE" $.Release.Namespace | quote }}
+                {{- end }}
+              image: {{ $values.image | default "alpine" }}
+              name: {{ template "fullname" $ }}
+              {{- if $values.mountList }}
+              volumeMounts:
+                {{- range $mountValues := $values.mountList }}
+                {{- $volumeMounting = true }}
+                - mountPath: {{ printf "/%s" $mountValues }}
+                  name: config
+                  subPath: {{ $mountValues }}
+                {{- end }}
+              {{- end }}
+            {{- end }}
+          restartPolicy: OnFailure
+          serviceAccountName: {{ template "fullname" $ }}-sa
+          {{- if $volumeMounting }}
+          volumes:
+            - configMap:
+                name: {{ template "fullname" . }}-cm
+              name: config
+          {{- end }}
+  schedule: {{ .Values.cron.schedule | quote }}
+  successfulJobsHistoryLimit: 0
+---
+{{- end }}
+{{- end }}
+{{- if .Values.autoscaling }}
+{{- if .Values.autoscaling.enabled }}
+{{- range $index, $list := .Values.autoscaling.scaleBy }}
+{{- if eq $list.metric "time" }}
+{{- if not $list.target }}
+{{- fail "\n\nError --> mising 'target' in autoscaling.scaleBy.*.time list\n" }}
+{{- end }}
+{{- range $timeIndex, $timeList := $list.target }}
+{{- range $key, $value := $timeList }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    app: {{ template "fullname" $ }}
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+  name: {{ template "fullname" $ }}-{{ $timeIndex }}-cj
+  namespace: {{ $.Release.Namespace }}
+spec:
+  failedJobsHistoryLimit: 0
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: {{ template "fullname" $ }}
+            chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+            release: {{ $.Release.Name }}
+        spec:
+          containers:
+            - name: {{ template "fullname" $ }}
+              image: bitnami/kubectl:1.16.13
+              args:
+                - patch
+                - hpa
+                - {{ template "fullname" $ }}-hpa
+                - -p
+                - '{"spec": {"minReplicas": {{ $value }} }}'
+          restartPolicy: OnFailure
+          serviceAccountName: {{ template "fullname" $ }}-sa
+  schedule: {{ $key | quote }}
+  successfulJobsHistoryLimit: 0
+---
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

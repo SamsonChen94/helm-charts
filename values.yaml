@@ -1,0 +1,129 @@
+## Required. Creates Kubernetes service and ingress configuration
+## serviceType: ClusterIP, NodePort, LoadBalancer, InternalLoadBalancer
+## portMapping: ContainerPort:ServicePort, leave ServicePort to skip mapping
+## by default, all portMappings are assumed to be tcp
+## Use "headless: true" to set a headless service, pods directly accessible
+## NOTE: use "NodePort" when ingress is enabled
+networking:
+  serviceType: NodePort
+  portMappings:
+    - "8080:80/tcp"
+    - "8080:80/udp"
+    - "44380:443"
+    - "8081:"
+    - "8081:/udp"
+  headless: false
+  ## TODO: allow multiple GKE services for the same deployment
+
+  ## Optional. Creates the ingress and its networking components
+  ## Includes configuration for Google's GKE managed certificates
+  ## Also includes Google's GKE frontend configuration
+  ## Use "ssl: true" to turn on Google's managed certificates
+  ## staticIPName: static IP name on Google Cloud Platform
+  ## domainName: domain name for this ingress, remember to set it on your DNS
+  ## domainPath: ingress traffic routing via domain pathing, default is "/*"
+  ## sslPolicy: SSL policy name defined in Google Cloud Platform
+  ## httpsRedirect: supported values and its corresponding HTTP respond codes:
+  ##   - MOVED_PERMANENTLY_DEFAULT (301)
+  ##   - FOUND (302)
+  ##   - SEE_OTHER (303)
+  ##   - TEMPORARY_REDIRECT (307)
+  ##   - PERMANENT_REDIRECT (308)
+  ## NOTE: only supports one GKE service per ingress
+  ingress:
+    enabled: true
+    ssl: true
+    staticIPName: oms-shoplus-staging
+    domainName: oms-staging.shoplus.me
+    # domainPath: /*
+    sslPolicy: min-tls-1-2-compatible
+    # httpsRedirect: MOVED_PERMANENTLY_DEFAULT
+    ## TODO: allow multiple GKE ingresses for the same deployment
+    ## TODO: allow multiple domain paths for the same ingress
+    ## TODO: allow multiple domain names for the same ingress
+
+## Optional. Creates backend config for Kubernetes services
+## backendTimeout is a value in seconds
+## connectionDrain is a value in seconds, beware to not set a value too high
+## cloudArmor is the GCP cloud armor security policy name
+## logSampleRate supports values from 0 to 1
+## "iap: true" requires CLIENT_ID and CLIENT_SECRET properly set in secrets
+## sessionAffinity supports CLIENT_IP and GENERATED_COOKIE
+## cookieTTL is tied to GENERATED_COOKIE sessionAffinity
+## Ref: https://cloud.google.com/kubernetes-engine/docs/how-to/ingress-features
+## NOTE: backend configurations are used for GKE only (need to check)
+## NOTE: IAP needs to set "enabled: false" to fully disable IAP, check Ref
+## NOTE: CDN, custom health check, and custom request header are not supported
+backendConfig:
+  enabled: false
+  # backendTimeout: 30
+  # connectionDrain: 30
+  # cloudArmor: security-policy-name
+  # logSampleRate: 0.1
+  iap: false
+  # sessionAffinity: CLIENT_IP
+  # cookieTTL: 30
+
+## Optional. Creates autoscaling by multiple metrics
+## New autoscaling API allows scaling by multiple metrics and thresholds
+## Supported values for metric: cpu, memory, pubsub, time
+## Supported values for scalingType: Utilization, AverageValue
+## NOTE: Utilization scalingType is only supported for cpu and memory
+## NOTE: scalingLabelValue is the pubsub metric label filter
+## NOTE: use "time" metric to scale pods according to time of date
+autoscaling:
+  enabled: false
+  max: 4
+  min: 1
+  scaleBy:
+    - metric: cpu
+      target: 80
+      type: Utilization
+    - metric: memory
+      target: 100Mi
+      type: AverageValue
+    # - metric: time
+    #   target:
+    #     - "0 */2 * * *": 2
+    #     - "0 1-23/2 * * *": 1
+    # - metric: pubsub
+    #   target: 1000
+    #   metricLabelValue: shoplus-staging-activejob-high
+
+## Optional. Creates configuration file mappings
+## These configuration files will be placed inside containers, overwriting
+## files already present in the container image
+## NOTE: filenames listed in config.files must exist in ./configs directory
+config:
+  enabled: false
+  files:
+    - testing.sh
+
+## Optional. Creates secret data using "Helm Secrets"
+## These secrets can be in the form of a file or environment variable
+## All filenames listed in secrets.files and all variable names listed in
+## secrets.variables must be defined and encrypted in ./secrets directory
+## NOTE: ensure secrets plugin is configured properly
+## ref: https://github.com/jkroepke/helm-secrets
+secrets:
+  enabled: false
+  fileNames:
+    - thisIsASecretFileName.log
+  variableNames:
+    - thisIsASecretVariableName
+    - CLIENT_ID
+    - CLIENT_SECRET
+
+## Optional. Creates cron jobs, running independently of the main application
+## Cron jobs creates standalone pods (or jobs)
+## NOTE: filenames listed in "mountList" must exist in ./configs directory
+cron:
+  enabled: false
+  schedule: "0 * * * *"
+  jobs:
+    ## NOTE: 'NAMESPACE' will be replaced in the chart with .Release.Namespace
+    - execute: ["sh", "/gorlogs.sh", "NAMESPACE"]
+      image: gcr.io/google.com/cloudsdktool/cloud-sdk:alpine
+      mountList: ["gorlogs.sh"]
+
+## Optional. Enables Prometheus metric scraping

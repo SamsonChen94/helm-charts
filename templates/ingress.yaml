@@ -1,0 +1,36 @@
+{{- if .Values.networking.ingress }}
+{{- if .Values.networking.ingress.enabled }}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  {{- with .Values.networking.ingress }}
+  {{- if or ( or .ssl .staticIPName ) ( or .sslPolicy .httpsRedirect ) }}
+  annotations:
+    {{- if .staticIPName }}
+    kubernetes.io/ingress.global-static-ip-name: {{ .staticIPName }}
+    {{- end }}
+    {{- if .ssl }}
+    networking.gke.io/managed-certificates: {{ template "fullname" $ }}-mcrt
+    {{- end }}
+    {{- if or .sslPolicy .httpsRedirect }}
+    networking.gke.io/v1beta1.FrontendConfig: {{ template "fullname" $ }}-frontendconfig
+    {{- end }}
+  {{- end }}
+  labels:
+    app: {{ template "fullname" $ }}
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+  name: {{ template "fullname" $ }}-ing
+  namespace: {{ $.Release.Namespace }}
+spec:
+  rules:
+  - host: {{ required "\n\nError --> networking.ingress.domainName is required when ingress is enabled\n" .domainName }}
+    http:
+      paths:
+      - backend:
+          serviceName: {{ template "fullname" $ }}-svc
+          servicePort: 80
+        path: {{ .domainPath | default "/*" }}
+  {{- end }}
+{{- end }}
+{{- end }}
