@@ -1,0 +1,34 @@
+# Ignore system env config.
+/.env
+
+# Ignore Lokalise config
+.lokalise.cfg
+.lokalise.yml
+
+# Ignore the default SQLite database.
+/db/*.sqlite3
+/db/*.sqlite3-journal
+
+# Ignore all logfiles and tempfiles.
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+
+# Ignore mac custom file attributes config.
+.DS_Store
+
+# personal workspace setting
+.vscode/
+
+# Docker
+docker/volumes/**
+
+# decrypted helm-secret files
+**/*.yaml.dec
+
+# Ignore terraform temp files
+.terraform
+*.tfstate
+*.tfstate.backup
+.terragrunt-cache
