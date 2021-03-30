@@ -9,10 +9,13 @@ metadata:
     {{- if eq .Values.networking.serviceType "InternalLoadBalancer" }}
     cloud.google.com/load-balancer-type: "Internal"
     {{- end }}
-    # TODO: prometheus.io/scrape annotations
-    # prometheus.io/scrape: true
-    # prometheus.io/port: 9090
-    # prometheus.io/path: metrics
+    {{- if .Values.prometheus }}
+    {{- if and .Values.prometheus.enabled ( eq .Values.prometheus.scrapeLocation "service" ) }}
+    prometheus.io/scrape: true
+    prometheus.io/port: {{ .Values.prometheus.scrapePort | default "8080" }}
+    prometheus.io/path: {{ .Values.prometheus.scrapePath | default "/metrics" }}
+    {{- end }}
+    {{- end }}
   labels:
     app: {{ template "fullname" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}

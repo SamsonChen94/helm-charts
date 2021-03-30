@@ -136,3 +136,13 @@ cron:
       mountList: ["gorlogs.sh"]
 
 ## Optional. Enables Prometheus metric scraping
+## supported values for scrapeLocation: service, pod, ingress
+## NOTE: This is NOT to setup a Prometheus server
+## NOTE: This technically also depends on the Prometheus configuration
+## NOTE: only supports scraping one port number and scrape path per Helm chart
+## ref: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
+prometheus:
+  enabled: true
+  scrapeLocation: ingress
+  scrapePort: 9090
+  scrapePath: /metrics
