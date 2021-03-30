@@ -1,46 +1,55 @@
 ## Required. Creates Kubernetes service and ingress configuration
 ## serviceType: ClusterIP, NodePort, LoadBalancer, InternalLoadBalancer
-## portMapping: ContainerPort:ServicePort, leave ServicePort to skip mapping
-## by default, all portMappings are assumed to be tcp
 ## Use "headless: true" to set a headless service, pods directly accessible
+## Includes configuration for Google's GKE managed certificates
+## Also includes Google's GKE frontend and backend configurations
 ## NOTE: use "NodePort" when ingress is enabled
 networking:
   serviceType: NodePort
-  portMappings:
-    - "8080:80/tcp"
-    - "8080:80/udp"
-    - "44380:443"
-    - "8081:"
-    - "8081:/udp"
   headless: false
-  ## TODO: allow multiple GKE services for the same deployment
 
-  ## Optional. Creates the ingress and its networking components
-  ## Includes configuration for Google's GKE managed certificates
-  ## Also includes Google's GKE frontend configuration
-  ## Use "ssl: true" to turn on Google's managed certificates
-  ## staticIPName: static IP name on Google Cloud Platform
-  ## domainName: domain name for this ingress, remember to set it on your DNS
-  ## domainPath: ingress traffic routing via domain pathing, default is "/*"
-  ## sslPolicy: SSL policy name defined in Google Cloud Platform
-  ## httpsRedirect: supported values and its corresponding HTTP respond codes:
-  ##   - MOVED_PERMANENTLY_DEFAULT (301)
-  ##   - FOUND (302)
-  ##   - SEE_OTHER (303)
-  ##   - TEMPORARY_REDIRECT (307)
-  ##   - PERMANENT_REDIRECT (308)
-  ## NOTE: only supports one GKE service per ingress
-  ingress:
-    enabled: true
-    ssl: true
-    staticIPName: oms-shoplus-staging
-    domainName: oms-staging.shoplus.me
-    # domainPath: /*
-    sslPolicy: min-tls-1-2-compatible
-    # httpsRedirect: MOVED_PERMANENTLY_DEFAULT
-    ## TODO: allow multiple GKE ingresses for the same deployment
-    ## TODO: allow multiple domain paths for the same ingress
-    ## TODO: allow multiple domain names for the same ingress
+  ## NOTE: supports multiple ingresses per service
+  ## NOTE: supports only one service per deployment
+  ## NOTE: supports multiple service ports per deployment
+  config:
+    - ## Required. ContainerPort:ServicePort/Protocol
+      ## by default, service port will equal container port
+      ## by default, protocol is assumed to be TCP
+      portMapping: "8080:80/tcp"
+
+      ## Optional. Creates the ingress and its networking components
+      ingress: true
+
+      # ## Required if ingress is enabled, remember to set your DNS
+      domainName: www.example.com
+
+      # ## Optional. Turns on Google's managed certificates
+      ssl: true
+
+      # ## Optional. Static external IP name on Google Cloud Platform
+      staticIPName: example-external-ip-name
+
+      # ## Optional. Ingress traffic routing via domain pathing, default is "/*"
+      domainPath: /*
+
+      # ## Optional. SSL policy name defined in Google Cloud Platform
+      sslPolicy: example-policy-name
+
+      # ## Optional. Supported values and its corresponding HTTP respond codes
+      # ## ref: https://cloud.google.com/kubernetes-engine/docs/how-to/ingress-features#https_redirect
+      httpsRedirect: MOVED_PERMANENTLY_DEFAULT
+
+    - portMapping: "8080:80/udp"
+      ingress: true
+      domainName: www.example.com
+      ssl: true
+      staticIPName: example-external-ip-name
+      domainPath: /*
+      sslPolicy: example-policy-name
+      httpsRedirect: MOVED_PERMANENTLY_DEFAULT
+    - portMapping: "44380:443"
+    - portMapping: "8081:"
+    - portMapping: "8081:/udp"
 
 ## Optional. Creates backend config for Kubernetes services
 ## backendTimeout is a value in seconds

@@ -24,16 +24,16 @@ spec:
   clusterIP: None
   {{- end }}
   ports:
-    {{- range $ports := .Values.networking.portMappings }}
-    {{- if not ( regexMatch "^[0-9]+(:[0-9]*)?(/(tcp|udp))?$" $ports ) }}
-    {{- fail ( printf "\n\nError --> Invalid portMapping for %s. It should be in the form '<CONTAINERPORT>:<SERVICEPORT>/[tcp|udp]'" $ports ) }}
+    {{- range $ports := .Values.networking.config }}
+    {{- if not ( regexMatch "^[0-9]+(:[0-9]*)?(/(tcp|udp))?$" $ports.portMapping ) }}
+    {{- fail ( printf "\n\nError --> Invalid portMapping for %s. It should be in the form '<CONTAINERPORT>:<SERVICEPORT>/[tcp|udp]'" $ports.portMapping ) }}
     {{- end }}
-    {{- $containerPort := regexSplit ":" $ports -1 | first }}
-    {{- $protocol := last ( regexSplit "/" $ports -1 ) }}
+    {{- $containerPort := regexSplit ":" $ports.portMapping -1 | first }}
+    {{- $protocol := last ( regexSplit "/" $ports.portMapping -1 ) }}
     {{- if and ( not ( eq $protocol "tcp" ) ) ( not ( eq $protocol "udp" ) ) }}
     {{- $protocol = "tcp" }}
     {{- end }}
-    {{- $servicePort := regexSplit "/" ( regexSplit ":" $ports -1 | last ) -1 | first }}
+    {{- $servicePort := regexSplit "/" ( regexSplit ":" $ports.portMapping -1 | last ) -1 | first }}
     {{- if eq $servicePort "" }}
     {{- $servicePort = $containerPort }}
     {{- end }}

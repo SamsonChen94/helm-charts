@@ -1,36 +1,44 @@
-{{- if .Values.networking.ingress }}
-{{- if .Values.networking.ingress.enabled }}
+{{- if not .Values.networking }}
+{{- fail "\n\nError --> networking is a required field for all helm deployments\n" }}
+{{- end }}
+{{- if not .Values.networking.config }}
+{{- fail "\n\nError --> networking.config is a required field for all helm deployments\n" }}
+{{- end }}
+{{- range $index, $networkConfig := .Values.networking.config }}
+{{- if $networkConfig.ingress }}
+{{- if not ( eq $.Values.networking.serviceType "NodePort" ) }}
+{{- fail "\n\nError --> service type must be NodePort when ingress is enabled" }}
+{{- end }}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  {{- with .Values.networking.ingress }}
-  {{- if or ( or .ssl .staticIPName ) ( or .sslPolicy .httpsRedirect ) }}
+  {{- if or ( or $networkConfig.staticIPName $networkConfig.ssl ) ( $networkConfig.httpsRedirect ) }}
   annotations:
-    {{- if .staticIPName }}
+    {{- if $networkConfig.staticIPName }}
     kubernetes.io/ingress.global-static-ip-name: {{ .staticIPName }}
     {{- end }}
-    {{- if .ssl }}
-    networking.gke.io/managed-certificates: {{ template "fullname" $ }}-mcrt
+    {{- if $networkConfig.ssl }}
+    networking.gke.io/managed-certificates: {{ template "fullname" $ }}-{{ $index }}-mcrt
     {{- end }}
-    {{- if or .sslPolicy .httpsRedirect }}
-    networking.gke.io/v1beta1.FrontendConfig: {{ template "fullname" $ }}-frontendconfig
+    {{- if $networkConfig.httpsRedirect }}
+    networking.gke.io/v1beta1.FrontendConfig: {{ template "fullname" $ }}-{{ $index }}-frontendconfig
     {{- end }}
   {{- end }}
   labels:
     app: {{ template "fullname" $ }}
     chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
     release: {{ $.Release.Name }}
-  name: {{ template "fullname" $ }}-ing
+  name: {{ template "fullname" $ }}-{{ $index }}-ing
   namespace: {{ $.Release.Namespace }}
 spec:
   rules:
-  - host: {{ required "\n\nError --> networking.ingress.domainName is required when ingress is enabled\n" .domainName }}
+  - host: {{ required "\n\nError --> domainName is required when ingress is enabled\n" $networkConfig.domainName }}
     http:
       paths:
       - backend:
           serviceName: {{ template "fullname" $ }}-svc
-          servicePort: 80
-        path: {{ .domainPath | default "/*" }}
-  {{- end }}
+          servicePort: {{ regexSplit "/" ( regexSplit ":" $networkConfig.portMapping -1 | last ) -1 | first }}
+        path: {{ $networkConfig.domainPath | default "/*" }}
+---
 {{- end }}
 {{- end }}
