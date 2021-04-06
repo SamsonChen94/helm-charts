@@ -1,0 +1,44 @@
+{{- if .Values.storage }}
+{{- if .Values.storage.enabled }}
+{{- if .Values.storage.mountExistingDiskName }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    app: {{ template "fullname" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+  name: {{ template "fullname" . }}-pv
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: {{ required "\n\nError --> storage size required\n" .Values.storage.size }}
+  claimRef:
+    name: {{ template "fullname" . }}-pvc
+    namespace: {{ .Release.Namespace }}
+  gcePersistentDisk:
+    fsType: ext4
+    pdName: {{ .Values.storage.mountExistingDiskName }}
+  {{- if .Values.nodeAffinity }}
+  {{- if .Values.nodeAffinity.enabled }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: failure-domain.beta.kubernetes.io/zone
+              operator: In
+              values:
+                - asia-east1-c
+  {{- end }}
+  {{- end }}
+  {{- if not .Values.storage.persistent }}
+  persistentVolumeReclaimPolicy: Delete
+  {{- else }}
+  persistentVolumeReclaimPolicy: {{ .Values.storage.persistent | ternary "Retain" "Delete" }}
+  {{- end }}
+  storageClassName: ""
+  volumeMode: Filesystem
+{{- end }}
+{{- end }}
+{{- end }}
