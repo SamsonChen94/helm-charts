@@ -1,3 +1,7 @@
+nodeAffinity:
+  enabled: false
+## TODO: node affinity and node anti-affinity
+
 ## Required. Creates Kubernetes service and ingress configuration
 ## serviceType: ClusterIP, NodePort, LoadBalancer, InternalLoadBalancer
 ## Use "headless: true" to set a headless service, pods directly accessible
@@ -122,6 +126,18 @@ secrets:
     - thisIsASecretVariableName
     - CLIENT_ID
     - CLIENT_SECRET
+
+## Optional. Creates additional persistent disks for storage
+## Set persistent as true to prevent disk deletion when persistent volume
+##   claim or persistent volume Kubernetes resources are deleted
+## Comment out mountExistingDiskName or leave it blank to dynamically provision
+##   a new persistent volume, use an existing disk name to mount existing disk
+## TODO: support ReadWriteMany access mode (use NFS)
+storage:
+  enabled: true
+  persistent: true
+  size: 100Gi
+  mountExistingDiskName: gce-disk-name
 
 ## Optional. Creates cron jobs, running independently of the main application
 ## Cron jobs creates standalone pods (or jobs)
