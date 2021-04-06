@@ -35,9 +35,8 @@ $ helm delete <APPLICATION_NAME>
 - Add `kind: Deployment`
 - Add `kind: StatefulSet`
 - Add `kind: DaemonSet`
-- Add `kind: PersistentVolume`
-- Add `kind: PersistentVolumeClaim`
 - Add `kind: PodSecurityPolicy`
+- Add `ReadWriteMany` support
 - Add `kind: StorageClass`
 - (Maybe) Add `kind: ClusterRole` and `kind: ClusterRoleBinding`
 - Update configuration in README.md
