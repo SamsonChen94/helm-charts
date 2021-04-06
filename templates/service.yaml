@@ -11,9 +11,9 @@ metadata:
     {{- end }}
     {{- if .Values.prometheus }}
     {{- if and .Values.prometheus.enabled ( eq .Values.prometheus.scrapeLocation "service" ) }}
-    prometheus.io/scrape: true
-    prometheus.io/port: {{ .Values.prometheus.scrapePort | default "8080" }}
-    prometheus.io/path: {{ .Values.prometheus.scrapePath | default "/metrics" }}
+    prometheus.io/scrape: "true"
+    prometheus.io/port: {{ .Values.prometheus.scrapePort | default "8080" | quote }}
+    prometheus.io/path: {{ .Values.prometheus.scrapePath | default "/metrics" | quote }}
     {{- end }}
     {{- end }}
   labels:

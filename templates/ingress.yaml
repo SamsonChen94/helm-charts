@@ -30,9 +30,9 @@ metadata:
     networking.gke.io/v1beta1.FrontendConfig: {{ template "fullname" $ }}-{{ $index }}-frontendconfig
     {{- end }}
     {{- if $prometheus }}
-    prometheus.io/scrape: true
-    prometheus.io/port: {{ $.Values.prometheus.scrapePort | default "8080" }}
-    prometheus.io/path: {{ $.Values.prometheus.scrapePath | default "/metrics" }}
+    prometheus.io/scrape: "true"
+    prometheus.io/port: {{ $.Values.prometheus.scrapePort | default "8080" | quote }}
+    prometheus.io/path: {{ $.Values.prometheus.scrapePath | default "/metrics" | quote }}
     {{- end }}
   {{- end }}
   labels:
