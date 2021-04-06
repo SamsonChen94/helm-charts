@@ -133,6 +133,7 @@ secrets:
 ## Comment out mountExistingDiskName or leave it blank to dynamically provision
 ##   a new persistent volume, use an existing disk name to mount existing disk
 ## TODO: support ReadWriteMany access mode (use NFS)
+## TODO: support multiple persistent disks per deployment
 storage:
   enabled: true
   persistent: true
