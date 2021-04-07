@@ -1,6 +1,184 @@
-nodeAffinity:
-  enabled: false
-## TODO: node affinity and node anti-affinity
+## Optional. Sets the number of replicas. Defaults to 1
+## NOTE: will be overwritten by autoscaling.min if autoscaling.enable is true
+replicas: 1
+
+## TODO: Image pull secrets
+## ref: https://kubernetes.io/docs/concepts/containers/images/#referring-to-an-imagepullsecrets-on-a-pod
+
+## Required. Detailed configuration for container(s)
+## Includes configuration for container name, image, environment variables,
+##   ports, entrypoint command/arguments, resources, volume mounts, and probes
+## NOTE: A single workload can house more than one container
+containers:
+  - ## Required. Container name that is unique in the scope of the workload
+    name: example
+
+    ## Required. Container image information
+    ## Supported values for pullPolicy: Always, Never, IfNotPresent
+    image:
+      name: alpine
+      tag: 3.13
+      pullPolicy: Always
+
+    ## Required. List the port numbers to open for this container
+    ports:
+      tcp: [80, 8080, 44380]
+      udp: [8080]
+
+    ## Required. Container CPU and memory resources allocation
+    ## It is recommended to always set limits and requests for both resources
+    ## NOTE: Max allocation for resources are limited by nodes, be wary of this
+    resources:
+      limits:
+        cpu: 100m
+        memory: 100Mi
+      requests:
+        cpu: 10m
+        memory: 10Mi
+
+    ## Optional. Container entrypoint arguments and command
+    args: ["Hello World"]
+    command: ["echo"]
+
+    ## Optional. Variable configurations.
+    ## Define workload environment variables directly here
+    ## Define workload secret variables in secrets directory
+    ## NOTE: secrets defined here only places variables in containers, to
+    ##       define secret resources, please review "secrets" section below
+    variables:
+      environment:
+        variableA: AAA
+        variableB: BBB
+        variableC: CCC
+      secret:
+        - secretA
+        - secretB
+        - secretC
+
+    ## Optional. Probe configurations, all probes can match if needed
+    ## Liveness probe continuously runs health checks on the specified
+    ##   container and restarts when check fails
+    ## Readiness probe continuously runs health checks on the specified
+    ##   container and blocks incoming traffic when check fails
+    probes:
+      liveness:
+        ## Supported types: httpGet, tcpSocket
+        type: httpGet
+        port: 80
+
+        ## The following config ONLY applies to httpGet type
+        headers:
+          exampleHeaderName: exampleHeaderValue
+        path: /path/to/health/check
+        scheme: HTTP
+
+        ## The following have default values, [3, 0, 10, 1, 1] respectively
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+
+      readiness:
+        ## Supported types: httpGet, tcpSocket
+        type: tcpSocket
+        port: 80
+
+        ## The following config ONLY applies to httpGet type
+        # headerName: exampleHeaderName
+        # headerValue: exampleHeaderValue
+        # path: /path/to/health/check
+        # scheme: HTTP
+
+        ## The following have default values, [3, 0, 10, 1, 1] respectively
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+
+      ## TODO: add support for startup probe
+
+    ## Optional. List of volumes/config names to mount into container
+    ## NOTE: volume mounts and config maps defined here only places volume
+    ##       mounts and config maps in containers, to define volume resources
+    ##       or config maps, please review "storage" or "config" sections below
+    ##       respectively
+    volumeMounts:
+      - exampleStorage
+      - secondaryStorage
+      - exampleConfigMap
+      - secondaryConfigMap
+
+  - name: example-sidecar
+    image:
+      name: alpine
+      tag: 3.13
+      pullPolicy: Always
+    ports:
+      tcp: [8081]
+      udp: [8081]
+    resources:
+      limits:
+        cpu: 100m
+        memory: 100Mi
+      requests:
+        cpu: 10m
+        memory: 10Mi
+    args: ["Hello World"]
+    command: ["echo"]
+
+## TODO: initializing containers
+## ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+
+## Optional. Controls how and where pods will be deployed
+## Leave this section commented out for default scheduling
+## Use updateType to control how the pods are updated
+## Use nodeSelector to control which nodes can the pods be deployed to
+## Use tolerations to allow pods to be deployed to tainted nodes
+## Use affinity to finely control pod distribution
+## NOTE: Only one scheduling configuration per workload (deploy, sts, ds)
+scheduling:
+  ## Supported values for updateType: RollingUpdate (default) and Recreate
+  ## maxSurge controls how many pods can surge during the update
+  ## maxUnavailable controls how many pods are unavailable during the update
+  ## NOTE: maxSurge and maxUnavailable are only available for RollingUpdate
+  updateType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+
+  ## Optional. Specify which Kubernetes scheduler to schedule this workload
+  ## NOTE: default is default-scheduler
+  schedulerName: default-scheduler
+
+  ## Optional. Uses Kubernetes node pool labels to control pod deployment
+  ## key is the node pool label key
+  ## value is the node pool label value
+  nodeSelector:
+    key: workload-pool
+    value: example
+
+  ## Optional. Allows pods to run on tainted node pools
+  ## Tainted node pools will only allow pods with tolerations to schedule
+  ## NOTE: a single workload (deploy, sts, ds) can contain multiple tolerations
+  tolerations:
+    - effect: NoSchedule
+      key: node-pool
+      operator: Equal
+      value: example
+
+  ## Optional. Attracts or guarantees pods are scheduled
+  ## Three existing types of affinities:
+  ##   node affinity - pods are scheduled to specific nodes
+  ##   pod affinity - pods are scheduled to nodes with specific pods
+  ##   pod anti-affinity - pods are NOT schedule to nodes with specific pods
+  affinity:
+    enabled: false
+    ## TODO: node affinity, pod affinity, and pod anti-affinity
+    ## ref:
+    ##   https://kubernetes.io/docs/reference/kubernetes-api/common-definitions/node-affinity/#NodeAffinity
+    ##   https://kubernetes.io/docs/reference/kubernetes-api/common-definitions/pod-affinity/#PodAffinity
+    ##   https://kubernetes.io/docs/reference/kubernetes-api/common-definitions/pod-anti-affinity/#PodAntiAffinity
 
 ## Required. Creates Kubernetes service and ingress configuration
 ## serviceType: ClusterIP, NodePort, LoadBalancer, InternalLoadBalancer
@@ -105,7 +283,7 @@ autoscaling:
 
 ## Optional. Creates configuration file mappings
 ## These configuration files will be placed inside containers, overwriting
-## files already present in the container image
+##   files already present in the container image
 ## NOTE: filenames listed in config.files must exist in ./configs directory
 config:
   enabled: false
@@ -115,8 +293,10 @@ config:
 ## Optional. Creates secret data using "Helm Secrets"
 ## These secrets can be in the form of a file or environment variable
 ## All filenames listed in secrets.files and all variable names listed in
-## secrets.variables must be defined and encrypted in ./secrets directory
+##   secrets.variables must be defined and encrypted in ./secrets directory
 ## NOTE: ensure secrets plugin is configured properly
+## NOTE: this only creates the secret resource, to attach the secrets into the
+##       container, please review "containers" section above
 ## ref: https://github.com/jkroepke/helm-secrets
 secrets:
   enabled: false
@@ -132,6 +312,8 @@ secrets:
 ##   claim or persistent volume Kubernetes resources are deleted
 ## Comment out mountExistingDiskName or leave it blank to dynamically provision
 ##   a new persistent volume, use an existing disk name to mount existing disk
+## NOTE: this only creates the persistent volume resources, to attach the
+##       volume into the container, please review "containers" section above
 ## TODO: support ReadWriteMany access mode (use NFS)
 ## TODO: support multiple persistent disks per deployment
 storage:

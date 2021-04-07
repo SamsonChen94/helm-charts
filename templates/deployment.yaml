@@ -1,0 +1,220 @@
+{{- $autoscaling := false }}
+{{- if .Values.autoscaling }}
+{{- if .Values.autoscaling.enabled }}
+{{- $autoscaling = true }}
+{{- end }}
+{{- end }}
+{{- $configuration := false }}
+{{- if .Values.config }}
+{{- if .Values.config.enabled }}
+{{- $configuration = true }}
+{{- end }}
+{{- end }}
+{{- $secrets := false }}
+{{- if .Values.secrets }}
+{{- if .Values.secrets.enabled }}
+{{- $secrets = true }}
+{{- end }}
+{{- end }}
+{{- $prometheus := false }}
+{{- if .Values.prometheus }}
+{{- if and .Values.prometheus.enabled ( eq .Values.prometheus.scrapeLocation "pod" ) }}
+{{- $prometheus = true }}
+{{- end }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ template "fullname" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+  name: {{ template "fullname" . }}-deploy
+  namespace: {{ .Release.Namespace }}
+spec:
+  minReadySeconds: 10
+  progressDeadlineSeconds: 600
+  {{- if $autoscaling }}
+  replicas: {{ required "min in autoscaling required" .Values.autoscaling.min }}
+  {{- else }}
+  replicas: {{ .Values.replicas | default 1 }}
+  {{- end }}
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: {{ template "fullname" . }}
+      chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+      release: {{ .Release.Name }}
+  strategy:
+    {{- if .Values.scheduling }}
+    {{- if eq .Values.scheduling.updateType "RollingUpdate" }}
+    rollingUpdate:
+      maxSurge: {{ .Values.scheduling.maxSurge | default "25%" }}
+      maxUnavailable: {{ .Values.scheduling.maxUnavailable | default "25%" }}
+    type: RollingUpdate
+    {{- else if eq .Values.scheduling.updateType "Recreate" }}
+    {{- if or ( .Values.scheduling.maxSurge ) ( .Values.scheduling.maxUnavailable ) }}
+    {{- fail "\n\nError --> maxSurge and maxUnavailable only for RollingUpdate updateType.\n" }}
+    {{- end }}
+    type: Recreate
+    {{- end }}
+    {{- else }}
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+    {{- end }}
+  template:
+    {{- if or ( or $configuration $secrets ) $prometheus }}
+    annotations:
+      {{- if $configuration }}
+      checksum/config: {{ include ( print .Template.BasePath "/configMap.yaml" ) . | sha256sum }}
+      {{- end }}
+      {{- if $secrets }}
+      checksum/config: {{ include ( print .Template.BasePath "/secret.yaml" ) . | sha256sum }}
+      {{- end }}
+      {{- if $prometheus }}
+      prometheus.io/scrape: "true"
+      prometheus.io/port: {{ .Values.prometheus.scrapePort | default "8080" | quote }}
+      prometheus.io/path: {{ .Values.prometheus.scrapePath | default "/metrics" | quote }}
+      {{- end }}
+    {{- end }}
+    metadata:
+      labels:
+        app: {{ template "fullname" . }}
+        chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+        release: {{ .Release.Name }}
+    spec:
+      {{- if .Values.affinity }}
+      {{- if .Values.affinity.enabled }}
+      # affinity:
+      {{- end }}
+      {{- end }}
+      containers:
+        {{- $checkContainerName := list }}
+        {{- range $container := .Values.containers }}
+        {{- $probes := false }}
+        {{- if $container.probes }}
+        {{- $probes = true }}
+        {{- end }}
+        - {{ if $container.arguments -}}
+          args:
+            {{- range $argumentList := $container.arguments }}
+            - {{ $argumentList | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if $container.command }}
+          command:
+            {{- range $commandList := $container.command }}
+            - {{ $commandList | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if $container.variables }}
+          env:
+            {{- range $key, $value := $container.variables.environment }}
+            - name: {{ $key }}
+              value: {{ $value }}
+            {{- end }}
+            {{- range $value := $container.variables.secret }}
+            {{- if not $secrets }}
+            {{- fail "\n\nError --> secrets are not enabled but secrets variables are defined.\n" }}
+            {{- end }}
+            {{- if has $value $.Values.secrets.variableNames }}
+            - name: {{ $value }}
+              valueFrom:
+                secretKeyRef:
+                  key: {{ $value }}
+                  name: {{ $.Release.Name }}-secret
+            {{- else }}
+            {{- fail ( printf "\n\nError --> %s not defined in secrets.variableNames\n" $value )}}
+            {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- if $container.image }}
+          image: {{ $container.image.name }}:{{ $container.image.tag }}
+          imagePullPolicy: {{ $container.image.pullPolicy }}
+          {{- else }}
+          {{- fail "\n\nError --> container image not defined\n" }}
+          {{- end }}
+          {{- if $probes }}
+          {{- if $container.probes.liveness }}
+          livenessProbe:
+            {{ $container.probes.liveness.type }}:
+              {{- if $container.probes.liveness.headers }}
+              httpHeaders:
+                {{- range $key, $value := $container.probes.liveness.headers }}
+                - name: $key
+                  value: $value
+                {{- end }}
+              {{- end }}
+              path: {{ $container.probes.liveness.path | default "/" }}
+              port: {{ required "\n\nError --> missing port in probes.liveness\n" $container.probes.liveness.port }}
+              scheme: {{ $container.probes.liveness.scheme | default "HTTP" }}
+            failureThreshold: {{ $container.probes.failureThreshold | default "3" }}
+            initialDelaySeconds: {{ $container.probes.initialDelaySeconds | default "0" }}
+            periodSeconds: {{ $container.probes.periodSeconds | default "10" }}
+            successThreshold: {{ $container.probes.successThreshold | default "1" }}
+            timeoutSeconds: {{ $container.probes.timeoutSeconds | default "1" }}
+          {{- end }}
+          {{- end }}
+          {{- if has $container.name $checkContainerName }}
+          {{- fail "\n\nError --> duplicate container name found\n"}}
+          {{- end }}
+          {{- $checkContainerName := append $checkContainerName $container.name }}
+          name: {{ required "\n\nError --> missing container name\n" $container.name }}
+          ports:
+          {{- range $ports := $.Values.portMapping }}
+          {{- if not ( regexMatch "^[0-9]+(:[0-9]*)?(/(tcp|udp))?$" $ports ) }}
+          {{- fail ( printf "\n\nError --> Invalid portMapping for %s. It should be in the form '<CONTAINERPORT>:<SERVICEPORT>/[tcp|udp]'" $ports ) }}
+          {{- end }}
+          {{- $containerPort := regexSplit ":" $ports -1 | first }}
+          {{- $protocol := last ( regexSplit "/" $ports -1 ) }}
+          {{- if and ( not ( eq $protocol "tcp" ) ) ( not ( eq $protocol "udp" ) ) }}
+          {{- $protocol = "tcp" }}
+          {{- end }}
+            - containerPort: {{ $containerPort }}
+              protocol: {{ $protocol | upper }}
+          {{- end }}
+          {{- if $probes }}
+          {{- if $container.probes.readiness }}
+          readinessProbe:
+            {{ $container.probes.readiness.type }}:
+              {{- if $container.probes.readiness.headers }}
+              httpHeaders:
+                {{- range $key, $value := $container.probes.readiness.headers }}
+                - name: $key
+                  value: $value
+                {{- end }}
+              {{- end }}
+              path: {{ $container.probes.readiness.path | default "/" }}
+              port: {{ required "\n\nError --> missing port in probes.readiness\n" $container.probes.readiness.port }}
+              scheme: {{ $container.probes.readiness.scheme | default "HTTP" }}
+            failureThreshold: {{ $container.probes.failureThreshold | default "3" }}
+            initialDelaySeconds: {{ $container.probes.initialDelaySeconds | default "0" }}
+            periodSeconds: {{ $container.probes.periodSeconds | default "10" }}
+            successThreshold: {{ $container.probes.successThreshold | default "1" }}
+            timeoutSeconds: {{ $container.probes.timeoutSeconds | default "1" }}
+          {{- end }}
+          {{- end }}
+        {{- end }}
+      dnsPolicy: ClusterFirst
+      {{- if .Values.scheduling }}
+      {{- if .Values.scheduling.nodeSelector }}
+      nodeSelector:
+        {{ .Values.scheduling.nodeSelector.key }}: {{ .Values.scheduling.nodeSelector.value }}
+      {{- end }}
+      {{- end }}
+      restartPolicy: Always
+      {{- if .Values.scheduling }}
+      {{- if .Values.scheduling.schedulerName }}
+      schedulerName: {{ .Values.scheduling.schedulerName }}
+      {{- end }}
+      {{- end }}
+      securityContext: {}
+      terminationGracePeriodSeconds: 10
+      {{- if .Values.scheduling }}
+      {{- if .Values.scheduling.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+      {{- end }}
+      {{- end }}

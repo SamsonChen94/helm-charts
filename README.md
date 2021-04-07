@@ -32,7 +32,7 @@ $ helm delete <APPLICATION_NAME>
 |-----------|-------------|---------|
 
 # TODO
-- Add `kind: Deployment`
+- Refine `ports`, `volumeMount`, and `volumes` to deployment
 - Add `kind: StatefulSet`
 - Add `kind: DaemonSet`
 - Add `kind: PodSecurityPolicy`
@@ -41,4 +41,7 @@ $ helm delete <APPLICATION_NAME>
 - (Maybe) Add `kind: ClusterRole` and `kind: ClusterRoleBinding`
 - Update configuration in README.md
 - Add examples in README.md
+- Add node affinity, pod affinity, and pod anti-affinity
+- Add image pull secrets
 - Update `Ingress` component to use `networking.k8s.io/v1` API (for Kubernetes v1.19+)
+- Add `startupProbe` to workloads (for Kubernetes v1.20+)

@@ -20,8 +20,8 @@ spec:
   gcePersistentDisk:
     fsType: ext4
     pdName: {{ .Values.storage.mountExistingDiskName }}
-  {{- if .Values.nodeAffinity }}
-  {{- if .Values.nodeAffinity.enabled }}
+  {{- if .Values.affinity }}
+  {{- if .Values.affinity.enabled }}
   nodeAffinity:
     required:
       nodeSelectorTerms:
