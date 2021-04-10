@@ -37,7 +37,7 @@ containers:
         memory: 10Mi
 
     ## Optional. Container entrypoint arguments and command
-    args: ["Hello World"]
+    arguments: ["Hello World"]
     command: ["echo"]
 
     ## Optional. Variable configurations.
@@ -52,8 +52,21 @@ containers:
         variableC: CCC
       secret:
         - secretA
-        - secretB
-        - secretC
+        # - secretB
+        # - secretC
+
+    ## Optional. List of volume/config/secret names to mount into container
+    ## NOTE: volume mounts, config maps, and secrets defined here only places
+    ##       volume mounts, config maps, and secrets in containers, to define
+    ##       volume mounts, config maps, or secrets, please review "storage",
+    ##       "config", or "secrets" sections below respectively
+    volumeMounts:
+      # - exampleStorage
+      # - secondaryStorage
+      - exampleConfigMap.sh
+      # - secondaryConfigMap.conf
+      - exampleSecret.sh
+      - secondarySecret.json
 
     ## Optional. Probe configurations, all probes can match if needed
     ## Liveness probe continuously runs health checks on the specified
@@ -99,17 +112,6 @@ containers:
 
       ## TODO: add support for startup probe
 
-    ## Optional. List of volumes/config names to mount into container
-    ## NOTE: volume mounts and config maps defined here only places volume
-    ##       mounts and config maps in containers, to define volume resources
-    ##       or config maps, please review "storage" or "config" sections below
-    ##       respectively
-    volumeMounts:
-      - exampleStorage
-      - secondaryStorage
-      - exampleConfigMap
-      - secondaryConfigMap
-
   - name: example-sidecar
     image:
       name: alpine
@@ -125,8 +127,15 @@ containers:
       requests:
         cpu: 10m
         memory: 10Mi
-    args: ["Hello World"]
+    arguments: ["Hello World"]
     command: ["echo"]
+  - name: example-proxy
+    image:
+      name: alpine
+      tag: 3.13
+      pullPolicy: Always
+    ports:
+      tcp: [8080]
 
 ## TODO: initializing containers
 ## ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
@@ -194,41 +203,41 @@ networking:
   ## NOTE: supports only one service per deployment
   ## NOTE: supports multiple service ports per deployment
   config:
-    - ## Required. ContainerPort:ServicePort/Protocol
-      ## by default, service port will equal container port
-      ## by default, protocol is assumed to be TCP
-      portMapping: "8080:80/tcp"
-
-      ## Optional. Creates the ingress and its networking components
-      ingress: true
-
-      # ## Required if ingress is enabled, remember to set your DNS
-      domainName: www.example.com
-
-      # ## Optional. Turns on Google's managed certificates
-      ssl: true
-
-      # ## Optional. Static external IP name on Google Cloud Platform
-      staticIPName: example-external-ip-name
-
-      # ## Optional. Ingress traffic routing via domain pathing, default is "/*"
-      domainPath: /*
-
-      # ## Optional. SSL policy name defined in Google Cloud Platform
-      sslPolicy: example-policy-name
-
-      # ## Optional. Supported values and its corresponding HTTP respond codes
-      # ## ref: https://cloud.google.com/kubernetes-engine/docs/how-to/ingress-features#https_redirect
-      httpsRedirect: MOVED_PERMANENTLY_DEFAULT
-
-    - portMapping: "8080:80/udp"
-      ingress: true
-      domainName: www.example.com
-      ssl: true
-      staticIPName: example-external-ip-name
-      domainPath: /*
-      sslPolicy: example-policy-name
-      httpsRedirect: MOVED_PERMANENTLY_DEFAULT
+    # - ## Required. ContainerPort:ServicePort/Protocol
+    #   ## by default, service port will equal container port
+    #   ## by default, protocol is assumed to be TCP
+    #   portMapping: "8080:80/tcp"
+    #
+    #   ## Optional. Creates the ingress and its networking components
+    #   ingress: true
+    #
+    #   # ## Required if ingress is enabled, remember to set your DNS
+    #   domainName: www.example.com
+    #
+    #   # ## Optional. Turns on Google's managed certificates
+    #   ssl: true
+    #
+    #   # ## Optional. Static external IP name on Google Cloud Platform
+    #   staticIPName: example-external-ip-name
+    #
+    #   # ## Optional. Ingress traffic routing via domain pathing, default is "/*"
+    #   domainPath: /*
+    #
+    #   # ## Optional. SSL policy name defined in Google Cloud Platform
+    #   sslPolicy: example-policy-name
+    #
+    #   # ## Optional. Supported values and its corresponding HTTP respond codes
+    #   # ## ref: https://cloud.google.com/kubernetes-engine/docs/how-to/ingress-features#https_redirect
+    #   httpsRedirect: MOVED_PERMANENTLY_DEFAULT
+    #
+    # - portMapping: "8080:80/udp"
+    #   ingress: true
+    #   domainName: www.example.com
+    #   ssl: true
+    #   staticIPName: example-external-ip-name
+    #   domainPath: /*
+    #   sslPolicy: example-policy-name
+    #   httpsRedirect: MOVED_PERMANENTLY_DEFAULT
     - portMapping: "44380:443"
     - portMapping: "8081:"
     - portMapping: "8081:/udp"
@@ -286,9 +295,9 @@ autoscaling:
 ##   files already present in the container image
 ## NOTE: filenames listed in config.files must exist in ./configs directory
 config:
-  enabled: false
+  enabled: true
   files:
-    - testing.sh
+    - exampleConfigMap.sh
 
 ## Optional. Creates secret data using "Helm Secrets"
 ## These secrets can be in the form of a file or environment variable
@@ -299,11 +308,13 @@ config:
 ##       container, please review "containers" section above
 ## ref: https://github.com/jkroepke/helm-secrets
 secrets:
-  enabled: false
+  enabled: true
   fileNames:
-    - thisIsASecretFileName.log
+    - exampleSecret.sh
+    - secondarySecret.json
   variableNames:
     - thisIsASecretVariableName
+    - secretA
     - CLIENT_ID
     - CLIENT_SECRET
 
@@ -315,12 +326,15 @@ secrets:
 ## NOTE: this only creates the persistent volume resources, to attach the
 ##       volume into the container, please review "containers" section above
 ## TODO: support ReadWriteMany access mode (use NFS)
-## TODO: support multiple persistent disks per deployment
 storage:
   enabled: true
-  persistent: true
-  size: 100Gi
-  mountExistingDiskName: gce-disk-name
+  exampleStorage:
+    persistent: true
+    size: 100Gi
+    mountExistingDiskName: gce-disk-name
+  secondaryStorage:
+    persistent: true
+    size: 100Gi
 
 ## Optional. Creates cron jobs, running independently of the main application
 ## Cron jobs creates standalone pods (or jobs)
