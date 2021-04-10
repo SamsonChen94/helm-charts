@@ -1,20 +1,25 @@
 {{- if .Values.storage }}
 {{- if .Values.storage.enabled }}
+{{- range $key, $volume := .Values.storage }}
+{{- if not ( eq $key "enabled" ) }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
-    app: {{ template "fullname" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    release: {{ .Release.Name }}
-  name: {{ template "fullname" . }}-pvc
-  namespace: {{ .Release.Namespace }}
+    app: {{ template "fullname" $ }}
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+  name: {{ template "fullname" $ }}-{{ $key }}-pvc
+  namespace: {{ $.Release.Namespace }}
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ required "\n\nError --> storage size required\n" .Values.storage.size }}
+      storage: {{ required "\n\nError --> storage size required\n" $volume.size }}
   storageClassName: standard
+---
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
