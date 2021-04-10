@@ -96,6 +96,9 @@ spec:
       # affinity:
       {{- end }}
       {{- end }}
+      {{- if not .Values.containers }}
+      {{- fail "\n\nError --> containers is a required field for all helm deployments\n" }}
+      {{- end }}
       containers:
         {{- $checkContainerName := list }}
         {{- range $container := .Values.containers }}
