@@ -32,12 +32,12 @@ $ helm delete <APPLICATION_NAME>
 |-----------|-------------|---------|
 
 # TODO
-- Refine `ports`, `volumeMount`, and `volumes` to deployment
 - Add `kind: StatefulSet`
 - Add `kind: DaemonSet`
 - Add `kind: PodSecurityPolicy`
 - Add `ReadWriteMany` support
 - Add `kind: StorageClass`
+- Add `securityContext` to workloads
 - (Maybe) Add `kind: ClusterRole` and `kind: ClusterRoleBinding`
 - Update configuration in README.md
 - Add examples in README.md
