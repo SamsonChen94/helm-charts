@@ -212,6 +212,7 @@ spec:
           {{- if $container.volumeMounts }}
           volumeMounts:
             {{- range $mount := $container.volumeMounts }}
+            {{- if and ( and $disk $configuration ) $secret }}
             {{- if hasKey $.Values.storage $mount }}
             - mountPath: /mount/volume
               name: {{ $mount }}
@@ -225,6 +226,73 @@ spec:
               subPath: {{ $mount }}
             {{- else }}
             {{- fail ( printf "\n\nError --> %s not found in storage or config.files or secrets.fileNames\n" $mount ) }}
+            {{- end }}
+            {{- else if and $disk $configuration }}
+            {{- if hasKey $.Values.storage $mount }}
+            - mountPath: /mount/volume
+              name: {{ $mount }}
+            {{- else if has $mount $.Values.config.files }}
+            - mountPath: /mount/config/{{ $mount }}
+              name: configMap
+              subPath: {{ $mount }}
+            {{- else }}
+            {{- fail ( printf "\n\nError --> %s not found in storage or config.files\n" $mount ) }}
+            {{- end }}
+            {{- else if and $disk $secret }}
+            {{- if hasKey $.Values.storage $mount }}
+            - mountPath: /mount/volume
+              name: {{ $mount }}
+            {{- else if has $mount $.Values.secrets.fileNames }}
+            - mountPath: /mount/secret/{{ $mount }}
+              name: secret
+              subPath: {{ $mount }}
+            {{- else }}
+            {{- fail ( printf "\n\nError --> %s not found in storage or secrets.fileNames\n" $mount ) }}
+            {{- end }}
+            {{- else if and $configuration $secret }}
+            {{- if has $mount $.Values.config.files }}
+            - mountPath: /mount/config/{{ $mount }}
+              name: configMap
+              subPath: {{ $mount }}
+            {{- else if has $mount $.Values.secrets.fileNames }}
+            - mountPath: /mount/secret/{{ $mount }}
+              name: secret
+              subPath: {{ $mount }}
+            {{- else }}
+            {{- fail ( printf "\n\nError --> %s not found in config.files or secrets.fileNames\n" $mount ) }}
+            {{- end }}
+            {{- else if $disk }}
+            {{- if hasKey $.Values.storage $mount }}
+            - mountPath: /mount/volume
+              name: {{ $mount }}
+            {{- else }}
+            {{- fail ( printf "\n\nError --> %s not found in storage\n" $mount ) }}
+            {{- end }}
+            {{- if has $mount $.Values.config.files }}
+            - mountPath: /mount/config/{{ $mount }}
+              name: configMap
+              subPath: {{ $mount }}
+            {{- else }}
+            {{- fail ( printf "\n\nError --> %s not found in storage or config.files or secrets.fileNames\n" $mount ) }}
+            {{- end }}
+            {{- else if $configuration }}
+            {{- if has $mount $.Values.config.files }}
+            - mountPath: /mount/config/{{ $mount }}
+              name: configMap
+              subPath: {{ $mount }}
+            {{- else }}
+            {{- fail ( printf "\n\nError --> %s not found in config.files\n" $mount ) }}
+            {{- end }}
+            {{- else if $secret }}
+            {{- if has $mount $.Values.secrets.fileNames }}
+            - mountPath: /mount/secret/{{ $mount }}
+              name: secret
+              subPath: {{ $mount }}
+            {{- else }}
+            {{- fail ( printf "\n\nError --> %s not found in secrets.fileNames\n" $mount ) }}
+            {{- end }}
+            {{- else }}
+            {{- fail "\n\nError --> volumeMounts in container declare but storage, configuration, and secrets are not enabled\n" }}
             {{- end }}
             {{- end }}
           {{- end }}
