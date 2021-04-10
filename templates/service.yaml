@@ -40,6 +40,23 @@ spec:
     {{- if eq $servicePort "" }}
     {{- $servicePort = $containerPort }}
     {{- end }}
+    {{- $checkTargetPort := false }}
+    {{- range $targetPort := $.Values.containers }}
+    {{- if $targetPort.ports }}
+    {{- if and ( $targetPort.ports.tcp ) ( eq $protocol "tcp" ) }}
+    {{- if has ( float64 $containerPort ) $targetPort.ports.tcp }}
+    {{- $checkTargetPort = true }}
+    {{- end }}
+    {{- else if and ( $targetPort.ports.udp ) ( eq $protocol "udp" ) }}
+    {{- if has ( float64 $containerPort ) $targetPort.ports.udp }}
+    {{- $checkTargetPort = true }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- if not $checkTargetPort }}
+    {{- fail ( printf "\n\nError --> %s/%s container (target) port is not open in any container\n" $containerPort $protocol ) }}
+    {{- end }}
     - port: {{ $servicePort }}
       protocol: {{ $protocol | upper }}
       targetPort: {{ $containerPort }}
