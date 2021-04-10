@@ -22,26 +22,37 @@ metadata:
   name: {{ template "fullname" . }}-bc
   namespace: {{ .Release.Namespace }}
 spec:
-  {{- if and $backend .Values.backendConfig.backendTimeout }}
+  {{- if $backend }}
+  {{- if .Values.backendConfig.backendTimeout }}
   timeoutSec: {{ .Values.backendConfig.backendTimeout }}
   {{- end }}
-  {{- if and $backend .Values.backendConfig.connectionDrain }}
+  {{- end }}
+  {{- if $backend }}
+  {{- if .Values.backendConfig.connectionDrain }}
   connectionDraining:
     drainingTimeoutSec: {{ .Values.backendConfig.connectionDrain }}
   {{- end }}
-  {{- if and $backend .Values.backendConfig.cloudArmor }}
+  {{- end }}
+  {{- if $backend }}
+  {{- if .Values.backendConfig.cloudArmor }}
   securityPolicy:
     name: {{ .Values.backendConfig.cloudArmor }}
   {{- end }}
+  {{- end }}
   logging:
-    {{- if and $backend .Values.backendConfig.logSampleRate }}
+    {{- if $backend }}
+    {{- if .Values.backendConfig.logSampleRate }}
     enable: true
     sampleRate: {{ .Values.backendConfig.logSampleRate }}
     {{- else }}
     enable: false
     {{- end }}
+    {{- else }}
+    enable: false
+    {{- end }}
   iap:
-    {{- if and $backend .Values.backendConfig.iap }}
+    {{- if $backend }}
+    {{- if .Values.backendConfig.iap }}
     enabled: true
     {{- if $iapSecret }}
     oauthclientCredentials:
@@ -52,7 +63,11 @@ spec:
     {{- else }}
     enabled: false
     {{- end }}
-  {{- if and $backend .Values.backendConfig.sessionAffinity }}
+    {{- else }}
+    enabled: false
+    {{- end }}
+  {{- if $backend }}
+  {{- if .Values.backendConfig.sessionAffinity }}
   sessionAffinity:
     {{- if eq .Values.backendConfig.sessionAffinity "CLIENT_IP" }}
     affinityType: {{ .Values.backendConfig.sessionAffinity }}
@@ -60,4 +75,5 @@ spec:
     affinityType: GENERATED_COOKIE
     affinityCookieTtlSec: {{ .Values.backendConfig.cookieTTL | default 60 }}
     {{- end }}
+  {{- end }}
   {{- end }}
