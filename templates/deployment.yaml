@@ -10,10 +10,16 @@
 {{- $configuration = true }}
 {{- end }}
 {{- end }}
-{{- $secrets := false }}
+{{- $secret := false }}
 {{- if .Values.secrets }}
 {{- if .Values.secrets.enabled }}
-{{- $secrets = true }}
+{{- $secret = true }}
+{{- end }}
+{{- end }}
+{{- $disk := false }}
+{{- if .Values.storage }}
+{{- if .Values.storage.enabled }}
+{{- $disk = true }}
 {{- end }}
 {{- end }}
 {{- $prometheus := false }}
@@ -65,12 +71,12 @@ spec:
     type: RollingUpdate
     {{- end }}
   template:
-    {{- if or ( or $configuration $secrets ) $prometheus }}
+    {{- if or ( or $configuration $secret ) $prometheus }}
     annotations:
       {{- if $configuration }}
       checksum/config: {{ include ( print .Template.BasePath "/configMap.yaml" ) . | sha256sum }}
       {{- end }}
-      {{- if $secrets }}
+      {{- if $secret }}
       checksum/config: {{ include ( print .Template.BasePath "/secret.yaml" ) . | sha256sum }}
       {{- end }}
       {{- if $prometheus }}
@@ -102,35 +108,35 @@ spec:
             {{- range $argumentList := $container.arguments }}
             - {{ $argumentList | quote }}
             {{- end }}
-          {{- end }}
-          {{- if $container.command }}
+          {{ end -}}
+          {{ if $container.command -}}
           command:
             {{- range $commandList := $container.command }}
             - {{ $commandList | quote }}
             {{- end }}
-          {{- end }}
-          {{- if $container.variables }}
+          {{ end -}}
+          {{ if $container.variables -}}
           env:
             {{- range $key, $value := $container.variables.environment }}
             - name: {{ $key }}
               value: {{ $value }}
             {{- end }}
             {{- range $value := $container.variables.secret }}
-            {{- if not $secrets }}
-            {{- fail "\n\nError --> secrets are not enabled but secrets variables are defined.\n" }}
+            {{- if not $secret }}
+            {{- fail "\n\nError --> Secrets in container detected but secrets GKE resource not enabled.\n" }}
             {{- end }}
             {{- if has $value $.Values.secrets.variableNames }}
             - name: {{ $value }}
               valueFrom:
                 secretKeyRef:
                   key: {{ $value }}
-                  name: {{ $.Release.Name }}-secret
+                  name: {{ template "fullname" $ }}-secret
             {{- else }}
             {{- fail ( printf "\n\nError --> %s not defined in secrets.variableNames\n" $value )}}
             {{- end }}
             {{- end }}
-          {{- end }}
-          {{- if $container.image }}
+          {{ end -}}
+          {{ if $container.image -}}
           image: {{ $container.image.name }}:{{ $container.image.tag }}
           imagePullPolicy: {{ $container.image.pullPolicy }}
           {{- else }}
@@ -162,18 +168,18 @@ spec:
           {{- end }}
           {{- $checkContainerName := append $checkContainerName $container.name }}
           name: {{ required "\n\nError --> missing container name\n" $container.name }}
+          {{- if $container.ports }}
           ports:
-          {{- range $ports := $.Values.portMapping }}
-          {{- if not ( regexMatch "^[0-9]+(:[0-9]*)?(/(tcp|udp))?$" $ports ) }}
-          {{- fail ( printf "\n\nError --> Invalid portMapping for %s. It should be in the form '<CONTAINERPORT>:<SERVICEPORT>/[tcp|udp]'" $ports ) }}
+          {{- range $port := $container.ports.tcp }}
+            - containerPort: {{ $port }}
+              protocol: TCP
           {{- end }}
-          {{- $containerPort := regexSplit ":" $ports -1 | first }}
-          {{- $protocol := last ( regexSplit "/" $ports -1 ) }}
-          {{- if and ( not ( eq $protocol "tcp" ) ) ( not ( eq $protocol "udp" ) ) }}
-          {{- $protocol = "tcp" }}
+          {{- range $port := $container.ports.udp }}
+            - containerPort: {{ $port }}
+              protocol: UDP
           {{- end }}
-            - containerPort: {{ $containerPort }}
-              protocol: {{ $protocol | upper }}
+          {{- else }}
+          {{- fail "\n\nError --> container.ports is a required field.\n" }}
           {{- end }}
           {{- if $probes }}
           {{- if $container.probes.readiness }}
@@ -196,6 +202,29 @@ spec:
             timeoutSeconds: {{ $container.probes.timeoutSeconds | default "1" }}
           {{- end }}
           {{- end }}
+          {{- if $container.resources }}
+          resources:
+{{ toYaml $container.resources | indent 12 }}
+          {{- end }}
+          {{- if $container.volumeMounts }}
+          volumeMounts:
+            {{- range $mount := $container.volumeMounts }}
+            {{- if hasKey $.Values.storage $mount }}
+            - mountPath: /mount/volume
+              name: {{ $mount }}
+            {{- else if has $mount $.Values.config.files }}
+            - mountPath: /mount/config/{{ $mount }}
+              name: configMap
+              subPath: {{ $mount }}
+            {{- else if has $mount $.Values.secrets.fileNames }}
+            - mountPath: /mount/secret/{{ $mount }}
+              name: secret
+              subPath: {{ $mount }}
+            {{- else }}
+            {{- fail ( printf "\n\nError --> %s not found in storage or config.files or secrets.fileNames\n" $mount ) }}
+            {{- end }}
+            {{- end }}
+          {{- end }}
         {{- end }}
       dnsPolicy: ClusterFirst
       {{- if .Values.scheduling }}
@@ -210,11 +239,37 @@ spec:
       schedulerName: {{ .Values.scheduling.schedulerName }}
       {{- end }}
       {{- end }}
-      securityContext: {}
       terminationGracePeriodSeconds: 10
       {{- if .Values.scheduling }}
       {{- if .Values.scheduling.tolerations }}
       tolerations:
-{{ toYaml .Values.tolerations | indent 8 }}
+{{ toYaml .Values.scheduling.tolerations | indent 8 }}
       {{- end }}
+      {{- end }}
+      {{- if or ( or $configuration $secret ) $disk }}
+      volumes:
+        {{- if $secret }}
+        - name: secret
+          secret:
+            defaultMode: 420
+            secretName: {{ template "fullname" . }}-secret
+        {{- end }}
+        {{- if $configuration }}
+        - configMap:
+            defaultMode: 420
+            name: {{ template "fullname" . }}-cm
+          name: config
+        {{- end }}
+        {{- if $disk }}
+        {{- $checkVolumeName := list }}
+        {{- range $key, $_ := .Values.storage }}
+        {{- if has $key $checkVolumeName }}
+        {{- fail "\n\nError --> duplicate volume name found\n"}}
+        {{- end }}
+        {{- $checkVolumeName := append $checkVolumeName $key }}
+        - name: {{ $key }}
+          persistentVolumeClaim:
+            claimName: {{ template "fullname" $ }}-{{ $key }}-pvc
+        {{- end }}
+        {{- end }}
       {{- end }}
