@@ -22,10 +22,10 @@ containers:
 
     ## Required. List the port numbers to open for this container
     ports:
-      tcp: [80, 8080, 44380]
-      udp: [8080]
+      tcp: [80, 8080, 8081, 44380]
+      udp: [8080, 8081]
 
-    ## Required. Container CPU and memory resources allocation
+    ## Optional. Container CPU and memory resources allocation
     ## It is recommended to always set limits and requests for both resources
     ## NOTE: Max allocation for resources are limited by nodes, be wary of this
     resources:
@@ -52,8 +52,8 @@ containers:
         variableC: CCC
       secret:
         - secretA
-        # - secretB
-        # - secretC
+        - secretB
+        - secretC
 
     ## Optional. List of volume/config/secret names to mount into container
     ## NOTE: volume mounts, config maps, and secrets defined here only places
@@ -61,10 +61,10 @@ containers:
     ##       volume mounts, config maps, or secrets, please review "storage",
     ##       "config", or "secrets" sections below respectively
     volumeMounts:
-      # - exampleStorage
-      # - secondaryStorage
+      - exampleStorage
+      - secondaryStorage
       - exampleConfigMap.sh
-      # - secondaryConfigMap.conf
+      - secondaryConfigMap.conf
       - exampleSecret.sh
       - secondarySecret.json
 
@@ -98,8 +98,8 @@ containers:
         port: 80
 
         ## The following config ONLY applies to httpGet type
-        # headerName: exampleHeaderName
-        # headerValue: exampleHeaderValue
+        # headers:
+        #   headerName: exampleHeaderValue
         # path: /path/to/health/check
         # scheme: HTTP
 
@@ -176,18 +176,41 @@ scheduling:
       operator: Equal
       value: example
 
-  ## Optional. Attracts or guarantees pods are scheduled
-  ## Three existing types of affinities:
-  ##   node affinity - pods are scheduled to specific nodes
-  ##   pod affinity - pods are scheduled to nodes with specific pods
-  ##   pod anti-affinity - pods are NOT schedule to nodes with specific pods
+  ## Optional. More fine grained scheduling control
+  ## Six supported types of affinities:
+  ##   tryDeployToNode --> Attempts to deploy in specific node
+  ##   mustDeployToNode --> Must deploy in specific node
+  ##   tryDeployWithPod --> Attempts to deploy together with certain pods
+  ##   mustDeployWithPod --> Must deploy together with certain pods
+  ##   tryNotDeployWithPod --> Attempts to not deploy together with certain pods
+  ##   mustNotDeployWithPod --> Must not deploy together with certain pods
+  ## NOTE: each type supports multiple label keys and each label key can have
+  ##       multiple label values (comma separated)
+  ## TODO: support Exist, DoesNotExist, Gt, and Lt operators
+  ## TODO: add support for matchFields
+  ## TODO: add more control with weights in 'try' types
+  ## TODO: add support for more topology keys
+  ## TODO: add more control with namespace and namespaceSelector in 'pod' types
   affinity:
-    enabled: false
-    ## TODO: node affinity, pod affinity, and pod anti-affinity
-    ## ref:
-    ##   https://kubernetes.io/docs/reference/kubernetes-api/common-definitions/node-affinity/#NodeAffinity
-    ##   https://kubernetes.io/docs/reference/kubernetes-api/common-definitions/pod-affinity/#PodAffinity
-    ##   https://kubernetes.io/docs/reference/kubernetes-api/common-definitions/pod-anti-affinity/#PodAntiAffinity
+    enabled: true
+    tryDeployToNode:
+      - "node.kubernetes.io/instance-type=e2-standard-2"
+      - "nodeLabelKey1=nodeLabelValue1"
+    mustDeployToNode:
+      - "nodeLabelKey2=nodeLabelValue2"
+      - "nodeLabelKey3!=nodeLabelValue3,nodeLabelValue4"
+    tryDeployWithPod:
+      - "app=example1,example2"
+      - "labelKey!=LabelValue1,LabelValue2"
+    mustDeployWithPod:
+      - "app=example3,example4"
+      - "labelKey!=LabelValue3,LabelValue4"
+    tryNotDeployWithPod:
+      - "app=example5"
+      - "labelKey!=LabelValue5"
+    mustNotDeployWithPod:
+      - "app=example6"
+      - "labelKey!=LabelValue6"
 
 ## Required. Creates Kubernetes service and ingress configuration
 ## serviceType: ClusterIP, NodePort, LoadBalancer, InternalLoadBalancer
@@ -203,41 +226,41 @@ networking:
   ## NOTE: supports only one service per deployment
   ## NOTE: supports multiple service ports per deployment
   config:
-    # - ## Required. ContainerPort:ServicePort/Protocol
-    #   ## by default, service port will equal container port
-    #   ## by default, protocol is assumed to be TCP
-    #   portMapping: "8080:80/tcp"
-    #
-    #   ## Optional. Creates the ingress and its networking components
-    #   ingress: true
-    #
-    #   # ## Required if ingress is enabled, remember to set your DNS
-    #   domainName: www.example.com
-    #
-    #   # ## Optional. Turns on Google's managed certificates
-    #   ssl: true
-    #
-    #   # ## Optional. Static external IP name on Google Cloud Platform
-    #   staticIPName: example-external-ip-name
-    #
-    #   # ## Optional. Ingress traffic routing via domain pathing, default is "/*"
-    #   domainPath: /*
-    #
-    #   # ## Optional. SSL policy name defined in Google Cloud Platform
-    #   sslPolicy: example-policy-name
-    #
-    #   # ## Optional. Supported values and its corresponding HTTP respond codes
-    #   # ## ref: https://cloud.google.com/kubernetes-engine/docs/how-to/ingress-features#https_redirect
-    #   httpsRedirect: MOVED_PERMANENTLY_DEFAULT
-    #
-    # - portMapping: "8080:80/udp"
-    #   ingress: true
-    #   domainName: www.example.com
-    #   ssl: true
-    #   staticIPName: example-external-ip-name
-    #   domainPath: /*
-    #   sslPolicy: example-policy-name
-    #   httpsRedirect: MOVED_PERMANENTLY_DEFAULT
+    - ## Required. ContainerPort:ServicePort/Protocol
+      ## by default, service port will equal container port
+      ## by default, protocol is assumed to be TCP
+      portMapping: "8080:80/udp"
+
+      ## Optional. Creates the ingress and its networking components
+      ingress: true
+
+      ## Required if ingress is enabled, remember to set your DNS
+      domainName: www.example.com
+
+      ## Optional. Turns on Google's managed certificates
+      ssl: true
+
+      ## Optional. Static external IP name on Google Cloud Platform
+      staticIPName: example-external-ip-name
+
+      ## Optional. Ingress traffic routing via domain pathing, default is "/*"
+      domainPath: /*
+
+      ## Optional. SSL policy name defined in Google Cloud Platform
+      sslPolicy: example-policy-name
+
+      ## Optional. Supported values and its corresponding HTTP respond codes
+      ## ref: https://cloud.google.com/kubernetes-engine/docs/how-to/ingress-features#https_redirect
+      httpsRedirect: MOVED_PERMANENTLY_DEFAULT
+
+    - portMapping: "8080:80/udp"
+      ingress: true
+      domainName: www.example.com
+      ssl: true
+      staticIPName: example-external-ip-name
+      domainPath: /*
+      sslPolicy: example-policy-name
+      httpsRedirect: MOVED_PERMANENTLY_DEFAULT
     - portMapping: "44380:443"
     - portMapping: "8081:"
     - portMapping: "8081:/udp"
@@ -255,14 +278,14 @@ networking:
 ## NOTE: IAP needs to set "enabled: false" to fully disable IAP, check Ref
 ## NOTE: CDN, custom health check, and custom request header are not supported
 backendConfig:
-  enabled: false
-  # backendTimeout: 30
-  # connectionDrain: 30
-  # cloudArmor: security-policy-name
-  # logSampleRate: 0.1
-  iap: false
-  # sessionAffinity: CLIENT_IP
-  # cookieTTL: 30
+  enabled: true
+  backendTimeout: 30
+  connectionDrain: 30
+  cloudArmor: security-policy-name
+  logSampleRate: 0.1
+  iap: true
+  sessionAffinity: CLIENT_IP
+  cookieTTL: 30
 
 ## Optional. Creates autoscaling by multiple metrics
 ## New autoscaling API allows scaling by multiple metrics and thresholds
@@ -271,6 +294,7 @@ backendConfig:
 ## NOTE: Utilization scalingType is only supported for cpu and memory
 ## NOTE: scalingLabelValue is the pubsub metric label filter
 ## NOTE: use "time" metric to scale pods according to time of date
+## NOTE: "pubsub" metric scales pods by number of undelivered Pub/Sub messages
 autoscaling:
   enabled: false
   max: 4
@@ -282,13 +306,13 @@ autoscaling:
     - metric: memory
       target: 100Mi
       type: AverageValue
-    # - metric: time
-    #   target:
-    #     - "0 */2 * * *": 2
-    #     - "0 1-23/2 * * *": 1
-    # - metric: pubsub
-    #   target: 1000
-    #   metricLabelValue: shoplus-staging-activejob-high
+    - metric: time
+      target:
+        - "0 */2 * * *": 2
+        - "0 1-23/2 * * *": 1
+    - metric: pubsub
+      target: 1000
+      metricLabelValue: shoplus-staging-activejob-high
 
 ## Optional. Creates configuration file mappings
 ## These configuration files will be placed inside containers, overwriting
@@ -298,6 +322,7 @@ config:
   enabled: true
   files:
     - exampleConfigMap.sh
+    - secondaryConfigMap.conf
 
 ## Optional. Creates secret data using "Helm Secrets"
 ## These secrets can be in the form of a file or environment variable
@@ -315,6 +340,8 @@ secrets:
   variableNames:
     - thisIsASecretVariableName
     - secretA
+    - secretB
+    - secretC
     - CLIENT_ID
     - CLIENT_SECRET
 
