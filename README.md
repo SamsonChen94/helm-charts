@@ -38,11 +38,15 @@ $ helm delete <APPLICATION_NAME>
 - Add `ReadWriteMany` support
 - Add `kind: StorageClass`
 - Add `securityContext` to workloads
+- (Maybe) Add `kind: CertificateSigningRequest`
 - (Maybe) Add `kind: ClusterRole` and `kind: ClusterRoleBinding`
 - Update configuration in README.md
 - Add examples in README.md
 - Add node affinity, pod affinity, and pod anti-affinity
 - Add image pull secrets
 - Update `Ingress` component to use `networking.k8s.io/v1` API (for Kubernetes v1.19+)
+- (Maybe) Update `CertificateSigningRequest` component to use `certificates.k8s.io/v1` API (for Kubernetes v1.19+)
+- Add `seccomp` in `securityContext` (for Kubernetes v1.19+)
 - Add `startupProbe` to workloads (for Kubernetes v1.20+)
 - Check if volume, config map, and secret are used in workload
+- Add support for more fine grain `affinity` control
