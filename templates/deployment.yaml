@@ -91,9 +91,135 @@ spec:
         chart: {{ .Chart.Name }}-{{ .Chart.Version }}
         release: {{ .Release.Name }}
     spec:
-      {{- if .Values.affinity }}
-      {{- if .Values.affinity.enabled }}
-      # affinity:
+      {{- if .Values.scheduling.affinity }}
+      {{- if .Values.scheduling.affinity.enabled }}
+      affinity:
+        {{- if or .Values.scheduling.affinity.tryDeployToNode .Values.scheduling.affinity.mustDeployToNode }}
+        nodeAffinity:
+          {{- if .Values.scheduling.affinity.tryDeployToNode }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - preference:
+                matchExpressions:
+                  {{- range $value := .Values.scheduling.affinity.tryDeployToNode }}
+                  {{- if regexMatch "^[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}=[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}[,[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}]*$" $value }}
+                  - key: {{ regexSplit "=" $value -1 | first }}
+                    operator: In
+                    values: {{ regexSplit "," ( regexSplit "=" $value -1 | last ) -1 }}
+                  {{- else if regexMatch "^[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}!=[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}[,[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}]*$" $value }}
+                  - key: {{ regexSplit "!=" $value -1 | first }}
+                    operator: NotIn
+                    values: {{ regexSplit "," ( regexSplit "!=" $value -1 | last ) -1 }}
+                  {{- else }}
+                  {{- fail ( printf "\n\nError --> %s is not a valid label key-value pair\n" $value ) }}
+                  {{- end }}
+                  {{- end }}
+              weight: 100
+          {{- end }}
+          {{- if .Values.scheduling.affinity.mustDeployToNode }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  {{- range $value := .Values.scheduling.affinity.mustDeployToNode }}
+                  {{- if regexMatch "^[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}=[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}[,[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}]*$" $value }}
+                  - key: {{ regexSplit "=" $value -1 | first }}
+                    operator: In
+                    values: {{ regexSplit "," ( regexSplit "=" $value -1 | last ) -1 }}
+                  {{- else if regexMatch "^[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}!=[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}[,[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}]*$" $value }}
+                  - key: {{ regexSplit "!=" $value -1 | first }}
+                    operator: NotIn
+                    values: {{ regexSplit "," ( regexSplit "!=" $value -1 | last ) -1 }}
+                  {{- else }}
+                  {{- fail ( printf "\n\nError --> %s is not a valid label key-value pair\n" $value ) }}
+                  {{- end }}
+                  {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- if or .Values.scheduling.affinity.tryDeployWithPod .Values.scheduling.affinity.mustDeployWithPod }}
+        podAffinity:
+          {{- if .Values.scheduling.affinity.tryDeployWithPod }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  - matchExpressions:
+                      {{- range $value := .Values.scheduling.affinity.tryDeployWithPod }}
+                      {{- if regexMatch "^[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}=[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}[,[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}]*$" $value }}
+                      - key: {{ regexSplit "=" $value -1 | first }}
+                        operator: In
+                        values: {{ regexSplit "," ( regexSplit "=" $value -1 | last ) -1 }}
+                      {{- else if regexMatch "^[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}!=[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}[,[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}]*$" $value }}
+                      - key: {{ regexSplit "!=" $value -1 | first }}
+                        operator: NotIn
+                        values: {{ regexSplit "," ( regexSplit "!=" $value -1 | last ) -1 }}
+                      {{- else }}
+                      {{- fail ( printf "\n\nError --> %s is not a valid label key-value pair\n" $value ) }}
+                      {{- end }}
+                      {{- end }}
+                topologyKey: topology.kubernetes.io/zone
+              weight: 100
+          {{- end }}
+          {{- if .Values.scheduling.affinity.mustDeployWithPod }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                - matchExpressions:
+                    {{- range $value := .Values.scheduling.affinity.mustDeployWithPod }}
+                    {{- if regexMatch "^[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}=[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}[,[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}]*$" $value }}
+                    - key: {{ regexSplit "=" $value -1 | first }}
+                      operator: In
+                      values: {{ regexSplit "," ( regexSplit "=" $value -1 | last ) -1 }}
+                    {{- else if regexMatch "^[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}!=[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}[,[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}]*$" $value }}
+                    - key: {{ regexSplit "!=" $value -1 | first }}
+                      operator: NotIn
+                      values: {{ regexSplit "," ( regexSplit "!=" $value -1 | last ) -1 }}
+                    {{- else }}
+                    {{- fail ( printf "\n\nError --> %s is not a valid label key-value pair\n" $value ) }}
+                    {{- end }}
+                    {{- end }}
+              topologyKey: topology.kubernetes.io/zone
+          {{- end }}
+        {{- end }}
+        {{- if or .Values.scheduling.affinity.tryNotDeployWithPod .Values.scheduling.affinity.mustNotDeployWithPod }}
+        podAntiAffinity:
+          {{- if .Values.scheduling.affinity.tryNotDeployWithPod }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  - matchExpressions:
+                      {{- range $value := .Values.scheduling.affinity.tryNotDeployWithPod }}
+                      {{- if regexMatch "^[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}=[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}[,[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}]*$" $value }}
+                      - key: {{ regexSplit "=" $value -1 | first }}
+                        operator: In
+                        values: {{ regexSplit "," ( regexSplit "=" $value -1 | last ) -1 }}
+                      {{- else if regexMatch "^[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}!=[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}[,[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}]*$" $value }}
+                      - key: {{ regexSplit "!=" $value -1 | first }}
+                        operator: NotIn
+                        values: {{ regexSplit "," ( regexSplit "!=" $value -1 | last ) -1 }}
+                      {{- else }}
+                      {{- fail ( printf "\n\nError --> %s is not a valid label key-value pair\n" $value ) }}
+                      {{- end }}
+                      {{- end }}
+                topologyKey: topology.kubernetes.io/zone
+              weight: 100
+          {{- end }}
+          {{- if .Values.scheduling.affinity.mustNotDeployWithPod }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                - matchExpressions:
+                    {{- range $value := .Values.scheduling.affinity.mustNotDeployWithPod }}
+                    {{- if regexMatch "^[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}=[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}[,[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}]*$" $value }}
+                    - key: {{ regexSplit "=" $value -1 | first }}
+                      operator: In
+                      values: {{ regexSplit "," ( regexSplit "=" $value -1 | last ) -1 }}
+                    {{- else if regexMatch "^[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}!=[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}[,[a-z0-9A-Z][a-z0-9A-Z/.-]{1,62}]*$" $value }}
+                    - key: {{ regexSplit "!=" $value -1 | first }}
+                      operator: NotIn
+                      values: {{ regexSplit "," ( regexSplit "!=" $value -1 | last ) -1 }}
+                    {{- else }}
+                    {{- fail ( printf "\n\nError --> %s is not a valid label key-value pair\n" $value ) }}
+                    {{- end }}
+                    {{- end }}
+              topologyKey: topology.kubernetes.io/zone
+          {{- end }}
+        {{- end }}
       {{- end }}
       {{- end }}
       {{- if not .Values.containers }}
