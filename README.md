@@ -45,3 +45,4 @@ $ helm delete <APPLICATION_NAME>
 - Add image pull secrets
 - Update `Ingress` component to use `networking.k8s.io/v1` API (for Kubernetes v1.19+)
 - Add `startupProbe` to workloads (for Kubernetes v1.20+)
+- Check if volume, config map, and secret are used in workload
