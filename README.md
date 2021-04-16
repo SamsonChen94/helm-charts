@@ -35,15 +35,14 @@ $ helm delete <APPLICATION_NAME>
 - Add `kind: StatefulSet`
 - Add `kind: DaemonSet`
 - Add `kind: PodSecurityPolicy`
-- Add `ReadWriteMany` support
-- Add `kind: StorageClass`
+- (Maybe) Add `ReadWriteMany` support
 - Add `securityContext` to workloads
 - (Maybe) Add `kind: CertificateSigningRequest`
 - (Maybe) Add `kind: ClusterRole` and `kind: ClusterRoleBinding`
 - Update configuration in README.md
 - Add examples in README.md
-- Add node affinity, pod affinity, and pod anti-affinity
 - Add image pull secrets
+- Add testing (`helm lint`, `shellcheck`, `ct lint`)
 - Update `Ingress` component to use `networking.k8s.io/v1` API (for Kubernetes v1.19+)
 - (Maybe) Update `CertificateSigningRequest` component to use `certificates.k8s.io/v1` API (for Kubernetes v1.19+)
 - Add `seccomp` in `securityContext` (for Kubernetes v1.19+)
