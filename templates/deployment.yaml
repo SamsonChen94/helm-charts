@@ -466,7 +466,7 @@ spec:
         {{- $checkVolumeName := append $checkVolumeName $key }}
         - name: {{ $key }}
           persistentVolumeClaim:
-            claimName: {{ template "fullname" $ }}-{{ $key }}-pvc
+            claimName: {{ template "fullname" $ }}-{{ $key | lower }}-pvc
         {{- end }}
         {{- end }}
       {{- end }}

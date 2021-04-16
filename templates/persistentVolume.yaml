@@ -10,14 +10,14 @@ metadata:
     app: {{ template "fullname" $ }}
     chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
     release: {{ $.Release.Name }}
-  name: {{ template "fullname" $ }}-{{ $key }}-pv
+  name: {{ template "fullname" $ }}-{{ $key | lower }}-pv
 spec:
   accessModes:
     - ReadWriteOnce
   capacity:
     storage: {{ required "\n\nError --> storage size required\n" $volume.size }}
   claimRef:
-    name: {{ template "fullname" $ }}-{{ $key }}-pvc
+    name: {{ template "fullname" $ }}-{{ $key | lower }}-pvc
     namespace: {{ $.Release.Namespace }}
   gcePersistentDisk:
     fsType: ext4

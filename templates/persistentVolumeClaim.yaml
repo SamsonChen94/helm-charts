@@ -9,7 +9,7 @@ metadata:
     app: {{ template "fullname" $ }}
     chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
     release: {{ $.Release.Name }}
-  name: {{ template "fullname" $ }}-{{ $key }}-pvc
+  name: {{ template "fullname" $ }}-{{ $key | lower }}-pvc
   namespace: {{ $.Release.Namespace }}
 spec:
   accessModes:
