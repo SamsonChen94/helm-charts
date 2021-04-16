@@ -15,7 +15,7 @@
 {{- if not ( eq $.Values.networking.serviceType "NodePort" ) }}
 {{- fail "\n\nError --> service type must be NodePort when ingress is enabled" }}
 {{- end }}
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   {{- if or ( or $networkConfig.staticIPName $networkConfig.ssl ) ( or $networkConfig.httpsRedirect ) }}
