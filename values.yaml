@@ -2,6 +2,12 @@
 ## NOTE: will be overwritten by autoscaling.min if autoscaling.enable is true
 replicas: 1
 
+## Optional. Adds additional GKE resource labels
+## NOTE: app=NAME and chart=CHART-VERSION is already built in the chart
+labelOverride:
+  labelKeyAlpha: labelValueAlpha
+  labelKeyBeta: labelValueBeta
+
 ## TODO: Image pull secrets
 ## ref: https://kubernetes.io/docs/concepts/containers/images/#referring-to-an-imagepullsecrets-on-a-pod
 
@@ -186,11 +192,13 @@ scheduling:
   ##   mustNotDeployWithPod --> Must not deploy together with certain pods
   ## NOTE: each type supports multiple label keys and each label key can have
   ##       multiple label values (comma separated)
+  ## NOTE: to distribute current workload by region, use current workload labels
   ## TODO: support Exist, DoesNotExist, Gt, and Lt operators
   ## TODO: add support for matchFields
   ## TODO: add more control with weights in 'try' types
   ## TODO: add support for more topology keys
   ## TODO: add more control with namespace and namespaceSelector in 'pod' types
+  ## TODO: add support to distribute pod deployment by hostname/node (topology)
   affinity:
     enabled: true
     tryDeployToNode:
