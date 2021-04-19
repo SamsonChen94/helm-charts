@@ -8,8 +8,16 @@ labelOverride:
   labelKeyAlpha: labelValueAlpha
   labelKeyBeta: labelValueBeta
 
-## TODO: Image pull secrets
-## ref: https://kubernetes.io/docs/concepts/containers/images/#referring-to-an-imagepullsecrets-on-a-pod
+## TODO: implement secret resource for image pull secrets
+## Optional. Adds additional GKE secret for image pulling secrets
+## Secrets are bound by namespace, daemon sets will have multiple secrets
+## NOTE: "docker-username" and "docker-password" are required to exist in
+##       secrets/filename.yaml
+## NOTE: imagePullSecrets does not require secrets.enabled to be true
+# imagePullSecrets:
+#   enabled: true
+#   email: example@example.com
+#   server: https://registry.example.com/container/image
 
 ## Required. Detailed configuration for container(s)
 ## Includes configuration for container name, image, environment variables,
