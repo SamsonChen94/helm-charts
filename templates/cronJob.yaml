@@ -6,7 +6,9 @@ metadata:
   labels:
     app: {{ template "fullname" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    release: {{ .Release.Name }}
+    {{- if .Values.labelOverride }}
+{{ toYaml .Values.labelOverride | indent 4 }}
+    {{- end }}
   name: {{ template "fullname" . }}-cj
   namespace: {{ .Release.Namespace }}
 spec:
@@ -18,7 +20,9 @@ spec:
           labels:
             app: {{ template "fullname" . }}
             chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-            release: {{ .Release.Name }}
+            {{- if .Values.labelOverride }}
+{{ toYaml .Values.labelOverride | indent 12 }}
+            {{- end }}
         spec:
           {{- $volumeMounting := false }}
           containers:
@@ -68,7 +72,9 @@ metadata:
   labels:
     app: {{ template "fullname" $ }}
     chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
-    release: {{ $.Release.Name }}
+    {{- if $.Values.labelOverride }}
+{{ toYaml $.Values.labelOverride | indent 4 }}
+    {{- end }}
   name: {{ template "fullname" $ }}-{{ $timeIndex }}-cj
   namespace: {{ $.Release.Namespace }}
 spec:
@@ -80,7 +86,9 @@ spec:
           labels:
             app: {{ template "fullname" $ }}
             chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
-            release: {{ $.Release.Name }}
+            {{- if $.Values.labelOverride }}
+{{ toYaml $.Values.labelOverride | indent 12 }}
+            {{- end }}
         spec:
           containers:
             - name: {{ template "fullname" $ }}

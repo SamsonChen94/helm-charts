@@ -34,7 +34,9 @@ metadata:
   labels:
     app: {{ template "fullname" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    release: {{ .Release.Name }}
+    {{- if .Values.labelOverride }}
+{{ toYaml .Values.labelOverride | indent 4 }}
+    {{- end }}
   name: {{ template "fullname" . }}-deploy
   namespace: {{ .Release.Namespace }}
 spec:
@@ -50,7 +52,9 @@ spec:
     matchLabels:
       app: {{ template "fullname" . }}
       chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-      release: {{ .Release.Name }}
+      {{- if .Values.labelOverride }}
+{{ toYaml .Values.labelOverride | indent 6 }}
+      {{- end }}
   strategy:
     {{- if .Values.scheduling }}
     {{- if eq .Values.scheduling.updateType "RollingUpdate" }}
@@ -89,7 +93,9 @@ spec:
       labels:
         app: {{ template "fullname" . }}
         chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-        release: {{ .Release.Name }}
+        {{- if .Values.labelOverride }}
+{{ toYaml .Values.labelOverride | indent 8 }}
+        {{- end }}
     spec:
       {{- if .Values.scheduling.affinity }}
       {{- if .Values.scheduling.affinity.enabled }}

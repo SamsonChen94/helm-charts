@@ -38,7 +38,9 @@ metadata:
   labels:
     app: {{ template "fullname" $ }}
     chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
-    release: {{ $.Release.Name }}
+    {{- if $.Values.labelOverride }}
+{{ toYaml $.Values.labelOverride | indent 4 }}
+    {{- end }}
   name: {{ template "fullname" $ }}-{{ $index }}-ing
   namespace: {{ $.Release.Namespace }}
 spec:
