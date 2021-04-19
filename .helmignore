@@ -24,4 +24,4 @@
 *.tmproj
 
 # ignore testing directory
-helm/
+tests/
