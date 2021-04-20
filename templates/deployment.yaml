@@ -1,3 +1,6 @@
+{{- if empty .Values.containers }}
+{{- fail "\n\nError --> containers is a required field for all helm deployments and cannot be empty\n" }}
+{{- end }}
 {{- $autoscaling := false }}
 {{- if .Values.autoscaling }}
 {{- if .Values.autoscaling.enabled }}
@@ -97,6 +100,7 @@ spec:
 {{ toYaml .Values.labelOverride | indent 8 }}
         {{- end }}
     spec:
+      {{- if .Values.scheduling }}
       {{- if .Values.scheduling.affinity }}
       {{- if .Values.scheduling.affinity.enabled }}
       affinity:
@@ -228,8 +232,6 @@ spec:
         {{- end }}
       {{- end }}
       {{- end }}
-      {{- if not .Values.containers }}
-      {{- fail "\n\nError --> containers is a required field for all helm deployments\n" }}
       {{- end }}
       containers:
         {{- $checkContainerName := list }}
@@ -271,12 +273,17 @@ spec:
             {{- end }}
             {{- end }}
           {{ end -}}
-          {{ if $container.image -}}
-          image: {{ $container.image.name }}:{{ $container.image.tag }}
-          imagePullPolicy: {{ $container.image.pullPolicy }}
-          {{- else }}
-          {{- fail "\n\nError --> container image not defined\n" }}
+          {{ if empty $container.image -}}
+          {{- fail "\n\nError --> image is a required field in containers and cannot be empty\n" }}
           {{- end }}
+          {{ if empty $container.image.name -}}
+          {{- fail "\n\nError --> name is a required field in containers.*.image and cannot be empty\n" }}
+          {{- end }}
+          {{ if empty $container.image.tag -}}
+          {{- fail "\n\nError --> tag is a required field in containers.*.tag and cannot be empty\n" }}
+          {{- end }}
+          image: {{ $container.image.name }}:{{ $container.image.tag }}
+          imagePullPolicy: {{ $container.image.pullPolicy | default "Always" }}
           {{- if $probes }}
           {{- if $container.probes.liveness }}
           livenessProbe:
@@ -297,6 +304,9 @@ spec:
             successThreshold: {{ $container.probes.successThreshold | default "1" }}
             timeoutSeconds: {{ $container.probes.timeoutSeconds | default "1" }}
           {{- end }}
+          {{- end }}
+          {{- if empty $container.name }}
+          {{- fail "\n\nError --> name is a required field in containers and cannot be empty\n" }}
           {{- end }}
           {{- if has $container.name $checkContainerName }}
           {{- fail "\n\nError --> duplicate container name found\n"}}
