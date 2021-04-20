@@ -13,6 +13,7 @@ $ helm install <APPLICATION_NAME> .
 - [Kubernetes v1.18+](https://github.com/kubernetes/kubernetes)
 - [Helm v3+](https://github.com/helm/helm)
 - [Helm Secrets Plugin](https://github.com/jkroepke/helm-secrets)
+- [Helm Unit Test Plugin](https://github.com/quintush/helm-unittest)
 
 # Installing or Upgrading Chart with Secrets
 
