@@ -1,8 +1,8 @@
-{{- if not .Values.networking }}
-{{- fail "\n\nError --> networking is a required field for all helm deployments\n" }}
+{{- if empty .Values.networking }}
+{{- fail "\n\nError --> networking is a required field for all helm deployments and cannot be empty\n" }}
 {{- end }}
-{{- if not .Values.networking.config }}
-{{- fail "\n\nError --> networking.config is a required field for all helm deployments\n" }}
+{{- if empty .Values.networking.config }}
+{{- fail "\n\nError --> networking.config is a required field for all helm deployments and cannot be empty"}}
 {{- end }}
 {{- range $index, $networkConfig := .Values.networking.config }}
 {{- if $networkConfig.ssl }}
