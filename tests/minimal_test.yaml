@@ -1,0 +1,56 @@
+suite: minimum required configuration test
+templates:
+  - backendConfig.yaml
+  - deployment.yaml
+  - service.yaml
+tests:
+  - it: checking required value fields in deployment.yaml
+    values:
+      - ../values.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            image: alpine:3.13
+            imagePullPolicy: Always
+            name: example
+            ports:
+              - containerPort: 8080
+                protocol: TCP
+          count: 1
+        template: deployment.yaml
+      - equal:
+          path: spec.replicas
+          value: 1
+        template: deployment.yaml
+  - it: checking required value fields in service.yaml
+    values:
+      - ../values.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: spec.type
+          value: ClusterIP
+        template: service.yaml
+      - contains:
+          path: spec.ports
+          content:
+            port: 80
+            protocol: TCP
+            targetPort: 8080
+        template: service.yaml
+  - it: checking required value fields in backendConfig.yaml
+    values:
+      - ../values.yaml
+    asserts:
+      - equal:
+          path: spec
+          value:
+            logging:
+              enable: false
+            iap:
+              enabled: false
+        template: backendConfig.yaml

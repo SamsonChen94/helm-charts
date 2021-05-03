@@ -1,0 +1,19 @@
+# suite: testing labels in all Kubernetes resources
+# templates:
+#   - backendConfig.yaml
+#   - configMap.yaml
+#   - cronJob.yaml
+#   - deployment.yaml
+#   - frontendConfig.yaml
+#   - horizontalPodAutoscaler.yaml
+#   - ingress.yaml
+#   - managedCertificate.yaml
+#   - persistentVolume.yaml
+#   - persistentVolumeClaim.yaml
+#   - role.yaml
+#   - roleBinding.yaml
+#   - secret.yaml
+#   - service.yaml
+#   - serviceAccount.yaml
+# tests:
+#   - it:

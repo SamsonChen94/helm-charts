@@ -1,0 +1,12 @@
+containers:
+  - name: example-container
+    image:
+      name: alpine
+      tag: 3.13
+    ports:
+      tcp: [8080]
+
+networking:
+  serviceType: ClusterIP
+  config:
+    - portMapping: "8080:8080/tcp"

@@ -1,0 +1,67 @@
+suite: testing ingress and its features
+templates:
+  - ingress.yaml
+  - service.yaml
+tests:
+  - it: ingress should not exist when ingress is not enabled
+    values:
+      - ../values.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: ingress.yaml
+  - it: checking chart when ingress is enabled
+    values:
+      - ../values.yaml
+    set:
+      networking:
+        serviceType: NodePort
+        config:
+          - portMapping: "8080:80/tcp"
+            ingress: true
+            domainName: www.example.com
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: ingress.yaml
+      - equal:
+          path: spec
+          value:
+            rules:
+              - host: www.example.com
+                http:
+                  paths:
+                    - backend:
+                        serviceName: RELEASE-NAME-svc
+                        servicePort: 80
+                      path: /*
+        template: ingress.yaml
+  - it: test should fail when domainName is not provided
+    values:
+      - ../values.yaml
+    set:
+      networking:
+        serviceType: NodePort
+        config:
+          - portMapping: "8080:80/tcp"
+            ingress: true
+    asserts:
+      - failedTemplate:
+          errorMessage: domainName is required when ingress is enabled
+  - it: checking static IP configuration
+    values:
+      - ../values.yaml
+    set:
+      networking:
+        serviceType: NodePort
+        config:
+          - portMapping: "8080:80/tcp"
+            ingress: true
+            domainName: www.example.com
+            staticIPName: example-external-ip-name
+    asserts:
+      - equal:
+          path: metadata.annotations
+          value:
+            kubernetes.io/ingress.global-static-ip-name: example-external-ip-name
+        template: ingress.yaml
