@@ -274,14 +274,14 @@ spec:
             {{- end }}
           {{ end -}}
           {{ if empty $container.image -}}
-          {{- fail "\n\nError --> image is a required field in containers and cannot be empty\n" }}
-          {{- end }}
+          {{ fail "\n\nError --> image is a required field in containers and cannot be empty\n" -}}
+          {{ end -}}
           {{ if empty $container.image.name -}}
-          {{- fail "\n\nError --> name is a required field in containers.*.image and cannot be empty\n" }}
-          {{- end }}
+          {{ fail "\n\nError --> name is a required field in containers.*.image and cannot be empty\n" -}}
+          {{ end -}}
           {{ if empty $container.image.tag -}}
-          {{- fail "\n\nError --> tag is a required field in containers.*.tag and cannot be empty\n" }}
-          {{- end }}
+          {{ fail "\n\nError --> tag is a required field in containers.*.tag and cannot be empty\n" -}}
+          {{ end -}}
           image: {{ $container.image.name }}:{{ $container.image.tag }}
           imagePullPolicy: {{ $container.image.pullPolicy | default "Always" }}
           {{- if $probes }}
