@@ -1,0 +1,48 @@
+{{- /*
+  This resource is only for config maps. Data stored in config maps will be
+  injected into the workload post-deployment. Config maps can store either
+  strings or files
+*/}}
+{{- if .Values.configurations }}
+apiVersion: v1
+data:
+  {{- /*
+    Config maps as entire files
+    1. Retrieves glob data from ../config directory
+    2. Iterate over everything in "configurations.files"
+    3. Iterate over all files in ../config directory
+    4. Skip files that are not declared in "configurations.files"
+    5. Error out if element in "configurations.files" does not exist in ../config
+  */}}
+  {{- if .Values.configurations.files }}
+  {{- $directory := .Files.Glob "config/**" }}
+  {{- range $file := .Values.configurations.files }}
+  {{- $fileExists := false }}
+  {{- range $path, $_ := $directory }}
+  {{- $filename := split "/" $path }}
+  {{- if eq $filename._1 $file }}
+  {{- $fileExists = true }}
+  {{ $filename._1 }}: |
+    {{- $.Files.Get $path | trim | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- if not $fileExists }}
+  {{- fail ( printf "\n\nError --> %s does not exist in configs directory\n" $file ) }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- /*
+    Config maps as variables
+  */}}
+  {{- if .Values.configurations.strings }}
+  {{- range $key, $value := .Values.configurations.strings }}
+  {{ $key }}: {{ $value }}
+  {{- end }}
+  {{- end }}
+kind: ConfigMap
+metadata:
+  labels:
+    {{- include "labels" . | nindent 4 }}
+  name: {{ template "fullname" . }}-cm
+  namespace: {{ .Release.Namespace }}
+{{- end }}

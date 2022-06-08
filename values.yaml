@@ -1,0 +1,8 @@
+## Inject configuration files or environment variables into deployment via
+## configuration mapping
+# configurations:
+#   files:
+#     - config.conf
+#   strings:
+#     key1: value1
+#     key2: value2
