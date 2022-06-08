@@ -44,6 +44,7 @@ $ helm delete <APPLICATION_NAME>
 4. test (changes to Helm tests, unit/lint tests)
 5. styl (stylistic changes)
 6. rftr (refactor changes)
+7. chor (non-Helm usage changes)
 
 ## Operations
 
