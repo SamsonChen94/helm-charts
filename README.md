@@ -58,10 +58,8 @@ $ helm unittest .
 ```
 
 ## TODO List
-- Add **_helper.tpl** file
 - Configure helm unittest
 - Add `kind: Deployment`
-- Add `kind: ConfigMap`
 - Add `kind: BackendConfig`
 - Add `kind: FrontendConfig`
 - Add `kind: Service`
