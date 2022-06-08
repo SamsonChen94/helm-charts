@@ -2,37 +2,61 @@
 
 Helm is a tool to deploy applications on Kubernetes. Helm charts are basically templates for such applications. This Helm chart aims to function as an abstraction for Kubernetes resources, a (mostly) universal template to deploy as many applications, in as many use cases, as possible.
 
-# TL;DR
+## TL;DR
 
 ```
 $ helm upgrade --install --namespace <NAMESPACE> <APPLICATION_NAME> .
 ```
 
-# Prerequisites
+## Prerequisites
 
 - [Kubernetes v1.19+](https://github.com/kubernetes/kubernetes)
 - [Helm v3+](https://github.com/helm/helm)
 - [Helm Secrets Plugin](https://github.com/jkroepke/helm-secrets)
 - [Helm Unit Test Plugin](https://github.com/vbehar/helm3-unittest)
 
-# Installing or Upgrading Chart with Secrets
+# Usage
+
+## Installing or Upgrading Chart with Secrets
 
 ```
 $ helm secrets upgrade --install -f values.yaml -f secrets/<SECRET_FILE>.yaml --namespace <NAMESPACE> <APPLICATION_NAME> .
 ```
 
-# Uninstalling the chart
+## Uninstalling the chart
 
 ```
 $ helm delete <APPLICATION_NAME>
 ```
 
-# Configuration
+## Configuration
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 
-# TODO
+# Development Guide
+
+## Commit Types
+
+1. feat (new feature for the usage of Helm)
+2. fixs (bug fix for the usage of Helm)
+3. docs (changes to documentation)
+4. test (changes to Helm tests, unit/lint tests)
+5. styl (stylistic changes)
+6. rftr (refactor changes)
+
+## Operations
+
+1. Running lint test
+```
+$ helm lint
+```
+2. Running unit test
+```
+$ helm unittest .
+```
+
+## TODO List
 - Add **_helper.tpl** file
 - Configure helm unittest
 - Add `kind: Deployment`
