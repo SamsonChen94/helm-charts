@@ -18,13 +18,13 @@
 # Ignore mac custom file attributes config.
 .DS_Store
 
-# personal workspace setting
+# Ignore personal workspace setting
 .vscode/
 
-# Docker
+# Ignore Docker volumes
 docker/volumes/**
 
-# decrypted helm-secret files
+# Ignore decrypted helm-secret files
 **/*.yaml.dec
 
 # Ignore terraform temp files
@@ -32,3 +32,6 @@ docker/volumes/**
 *.tfstate
 *.tfstate.backup
 .terragrunt-cache
+
+# Ignore test snapshots
+tests/__snapshot__
