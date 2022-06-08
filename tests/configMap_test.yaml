@@ -1,0 +1,63 @@
+suite: test config map
+templates:
+  - configMap.yaml
+tests:
+  - it: should result in an empty file
+    release:
+      name: test
+      namespace: testing-ns
+      isUpgrade: true
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: should return correct metadata information
+    set:
+      configurations.strings.key1: value1
+    release:
+      name: test
+      namespace: testing-ns
+      isUpgrade: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isAPIVersion:
+          of: v1
+      - equal:
+          path: metadata.name
+          value: test-cm
+      - equal:
+          path: metadata.namespace
+          value: testing-ns
+      - isNotNull:
+          path: metadata.labels
+  - it: should get configuration data from configurations
+    set:
+      configurations.strings.key1: value1
+    asserts:
+      - equal:
+          path: data.key1
+          value: value1
+  - it: should get configuration file data from config directory
+    set:
+      configurations.files[0]: config.conf
+    asserts:
+      - isNotNull:
+          path: data.config\.conf
+  - it: should skip configuration files not defined in values.yaml
+    set:
+      configurations.files[0]: config.conf
+    asserts:
+      - isNull:
+          path: data.confing2\.conf
+  - it: should get configurations from multiple sources
+    values:
+      - ./values/cm-only.yaml
+    asserts:
+      - isNotNull:
+          path: data.config\.conf
+      - equal:
+          path: data.key1
+          value: value1
+      - equal:
+          path: data.key2
+          value: value2
