@@ -1,5 +1,8 @@
 {{- /*
-  This resource is only for deployments.
+  This resource is only for deployments. One of the main workloads in a
+  Kubernetes environment. When paired with other Kubernetes resources like
+  services, config maps, secrets, and horizontal pod autoscalers, this resource
+  will have different YAML configurations.
 */}}
 {{- if eq .Values.workload "deployment" }}
 {{- $configArgs := dict "config" .Values.configurations "configOutput" (dict) }}
@@ -16,10 +19,22 @@ spec:
   progressDeadlineSeconds: 600
   revisionHistoryLimit: 3
   selector:
+    {{- /*
+      WARNING: Selector labels are immutable! That means, once deployed, cannot
+               be changed without creating a new resource. In most cases, the
+               deployment will fail to deploy. However, at the worst case,
+               existing deployments will be destroyed and recreated.
+    */}}
     matchLabels:
       {{- include "selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      {{- /*
+        Checksum annotations will allow kubelet to check for any changes made
+        to a specific YAML file and redeploy this workload even when no changes
+        were made to this file directly. Effectively triggering a redeployment
+        of this workload when configurations or secrets have been altered.
+      */}}
       {{- if or $configArgs.configOutput.configFile $configArgs.configOutput.configString }}
       annotations:
         checksum/config: {{ include ( print .Template.BasePath "/configMap.yaml" ) . | sha256sum }}
@@ -29,6 +44,11 @@ spec:
     spec:
       containers:
         - {{ if $configArgs.configOutput.configString -}}
+          {{/*
+            Implement all environment variables as config maps. That is,
+            excluding secrets, all environment variables are defined solely in
+            the 'config' directory.
+          */ -}}
           env:
             {{- range $key, $value := $configArgs.config.strings }}
             - name: {{ $key }}
@@ -44,11 +64,23 @@ spec:
           ports:
             - containerPort: {{ .Values.containerPort | default "8080" }}
               protocol: {{ .Values.containerProtocol | default "TCP" }}
+          {{- /*
+            Configure volume mounts to the working container. Note that
+            environment variables from config maps and secrets do not require
+            a volume mount to be defined.
+          */}}
           {{- if $configArgs.configOutput.configFile }}
           volumeMounts:
             - mountPath: /mount/config
               name: config
           {{- end }}
+        {{- /*
+          In some use cases, multiple additional containers are necessary for
+          the business functions in a single pod. In such cases, additional
+          containers can be configured to run alongside the aforementioned
+          container. For more information on different patterns of
+          multi-container deployments, read up 'Container Design Patterns'.
+        */}}
         {{- if .Values.additionalContainers }}
         {{- range $additionalContainer := .Values.additionalContainers }}
         {{- $additionalConfigArgs := dict "config" $additionalContainer.configurations "configOutput" (dict) }}
@@ -69,6 +101,11 @@ spec:
           ports:
             - containerPort: {{ $.Values.containerPort | default "8080" }}
               protocol: {{ $.Values.containerProtocol | default "TCP" }}
+          {{- /*
+            Configure volume mounts to the working container. Note that
+            environment variables from config maps and secrets do not require
+            a volume mount to be defined.
+          */}}
           {{- if $additionalConfigArgs.configOutput.configFile }}
           volumeMounts:
             - mountPath: /mount/config
@@ -79,6 +116,11 @@ spec:
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       terminationGracePeriodSeconds: 10
+      {{- /*
+        Configure volume mounts to the Kubernetes node. Note that environment
+        variables from config maps and secrets do not required a volume to be
+        defined.
+      */}}
       {{- if $configArgs.configOutput.configFile }}
       volumes:
         - configMap:
