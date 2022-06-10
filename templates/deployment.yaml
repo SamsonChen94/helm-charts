@@ -38,7 +38,7 @@ spec:
                   key: {{ $key }}
             {{- end }}
           {{ end -}}
-          {{- include "imageNameTag" . }}
+          {{- include "imageNameTag" .Values }}
           imagePullPolicy: {{ .Values.imagePullPolicy | default "Always" }}
           name: {{ template "fullname" . }}
           ports:
@@ -49,6 +49,33 @@ spec:
             - mountPath: /mount/config
               name: config
           {{- end }}
+        {{- if .Values.additionalContainers }}
+        {{- range $additionalContainer := .Values.additionalContainers }}
+        {{- $additionalConfigArgs := dict "config" $additionalContainer.configurations "configOutput" (dict) }}
+        {{- include "configEnabledCheck" $additionalConfigArgs }}
+        - {{ if $additionalConfigArgs.configOutput.configString -}}
+          env:
+            {{- range $key, $value := $additionalConfigArgs.config.strings }}
+            - name: {{ $key }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "fullname" $ }}-cm
+                  key: {{ $key }}
+            {{- end }}
+          {{ end -}}
+          {{- include "imageNameTag" $additionalContainer }}
+          imagePullPolicy: {{ $additionalContainer.imagePullPolicy | default "Always" }}
+          name: {{ $additionalContainer.name }}
+          ports:
+            - containerPort: {{ $.Values.containerPort | default "8080" }}
+              protocol: {{ $.Values.containerProtocol | default "TCP" }}
+          {{- if $additionalConfigArgs.configOutput.configFile }}
+          volumeMounts:
+            - mountPath: /mount/config
+              name: config
+          {{- end }}
+        {{- end }}
+        {{- end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       terminationGracePeriodSeconds: 10

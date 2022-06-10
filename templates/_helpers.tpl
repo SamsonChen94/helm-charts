@@ -25,17 +25,17 @@ app: {{ template "fullname" . }}
 {{- end -}}
 
 {{/*
-  Image name and tag. Meant to be used in spec.template.spec.containers[].image
+  Image name and tag. Meant to be used in spec.template.spec.containers[0].image
   This should handle errors as well
 */}}
 {{- define "imageNameTag" -}}
-  {{- if not .Values.imageName -}}
+  {{- if not .imageName -}}
     {{- fail ( printf "\n\nError --> 'imageName' not defined\n" ) -}}
   {{- end -}}
-  {{- if not .Values.imageTag -}}
+  {{- if not .imageTag -}}
     {{- fail ( printf "\n\nError --> imageTag not found, use --set in the helm command 'helm --set imageTag=\"v1.0.0\" ...'\n" ) -}}
   {{- end -}}
-  image: {{ .Values.imageName }}:{{ .Values.imageTag }}
+  image: {{ .imageName }}:{{ .imageTag }}
 {{- end -}}
 
 {{/*

@@ -17,3 +17,16 @@
 #   strings:
 #     key1: value1
 #     key2: value2
+
+## Additional container configurations. Use this section if multiple containers
+## are required to run in the same Kubernetes pod
+# additionalContainers:
+#   - name: secondary-container
+#     imageName: nginx
+#     imagePullPolicy: IfNotPresent
+#     configurations:
+#       files:
+#         - config3.sh
+#       strings:
+#         key3: value3
+#         key4: value4
