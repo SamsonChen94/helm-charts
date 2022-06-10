@@ -1,0 +1,50 @@
+{{- /*
+  This resource is only for deployments.
+*/}}
+{{- if eq .Values.workload "deployment" }}
+{{- $configArgs := dict "config" .Values.configurations "configOutput" (dict) }}
+{{- include "configEnabledCheck" $configArgs }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{- include "labels" . | nindent 4 }}
+  name: {{ template "fullname" . }}-deploy
+  namespace: {{ .Release.Namespace }}
+spec:
+  minReadySeconds: 10
+  progressDeadlineSeconds: 600
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      {{- include "selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- if or $configArgs.configOutput.configFile $configArgs.configOutput.configString }}
+      annotations:
+        checksum/config: {{ include ( print .Template.BasePath "/configMap.yaml" ) . | sha256sum }}
+      {{- end }}
+      labels:
+        {{- include "labels" . | nindent 8 }}
+    spec:
+      containers:
+        - {{ if $configArgs.configOutput.configString -}}
+          env:
+            {{- range $key, $value := $configArgs.config.strings }}
+            - name: {{ $key }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "fullname" $ }}-cm
+                  key: {{ $key }}
+            {{- end }}
+          {{ end -}}
+          {{- include "imageNameTag" . }}
+          imagePullPolicy: {{ .Values.imagePullPolicy | default "Always" }}
+          name: {{ template "fullname" . }}
+          ports:
+            - containerPort: {{ .Values.containerPort | default "8080" }}
+              protocol: {{ .Values.containerProtocol | default "TCP" }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 10
+{{- end }}

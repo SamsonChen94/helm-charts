@@ -3,7 +3,9 @@
   injected into the workload post-deployment. Config maps can store either
   strings or files
 */}}
-{{- if .Values.configurations }}
+{{- $configArgs := dict "config" .Values.configurations "configOutput" (dict) }}
+{{- include "configEnabledCheck" $configArgs }}
+{{- if or $configArgs.configOutput.configFile $configArgs.configOutput.configString }}
 apiVersion: v1
 data:
   {{- /*
@@ -14,9 +16,9 @@ data:
     4. Skip files that are not declared in "configurations.files"
     5. Error out if element in "configurations.files" does not exist in ../config
   */}}
-  {{- if .Values.configurations.files }}
+  {{- if $configArgs.configOutput.configFile }}
   {{- $directory := .Files.Glob "config/**" }}
-  {{- range $file := .Values.configurations.files }}
+  {{- range $file := $configArgs.config.files }}
   {{- $fileExists := false }}
   {{- range $path, $_ := $directory }}
   {{- $filename := split "/" $path }}
@@ -34,8 +36,8 @@ data:
   {{- /*
     Config maps as variables
   */}}
-  {{- if .Values.configurations.strings }}
-  {{- range $key, $value := .Values.configurations.strings }}
+  {{- if $configArgs.configOutput.configString }}
+  {{- range $key, $value := $configArgs.config.strings }}
   {{ $key }}: {{ $value }}
   {{- end }}
   {{- end }}

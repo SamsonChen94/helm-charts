@@ -1,3 +1,14 @@
+## WARNING: This file is just an example. Please do not use this file to deploy
+##          anything. If any line was uncommented, unit test will fail!
+
+## Main workload definition.
+## Valid values: deployment, statefulset, daemonset, or cronjob
+# workload: deployment
+
+## Image configuration
+# imageName: nginx
+# imagePullPolicy: IfNotPresent
+
 ## Inject configuration files or environment variables into deployment via
 ## configuration mapping
 # configurations:
