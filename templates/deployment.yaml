@@ -44,7 +44,18 @@ spec:
           ports:
             - containerPort: {{ .Values.containerPort | default "8080" }}
               protocol: {{ .Values.containerProtocol | default "TCP" }}
+          {{- if $configArgs.configOutput.configFile }}
+          volumeMounts:
+            - mountPath: /mount/config
+              name: config
+          {{- end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       terminationGracePeriodSeconds: 10
+      {{- if $configArgs.configOutput.configFile }}
+      volumes:
+        - configMap:
+            name: {{ template "fullname" . }}-cm
+          name: config
+      {{- end }}
 {{- end }}
