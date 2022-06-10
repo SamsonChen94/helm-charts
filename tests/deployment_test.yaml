@@ -1,0 +1,96 @@
+suite: test deployment only
+templates:
+  - deployment.yaml
+tests:
+  - it: should result in an empty file
+    release:
+      name: test
+      namespace: testing-ns
+      isUpgrade: true
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: should return correct metadata information
+    set:
+      imageName: nginx
+      imageTag: latest
+      workload: deployment
+    release:
+      name: test
+      namespace: testing-ns
+      isUpgrade: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isAPIVersion:
+          of: apps/v1
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: test-deploy
+      - equal:
+          path: metadata.namespace
+          value: testing-ns
+      - isNotNull:
+          path: metadata.labels
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: test
+  - it: should return non-null labels
+    set:
+      imageName: nginx
+      imageTag: latest
+      workload: deployment
+    asserts:
+      - isNotNull:
+          path: metadata.labels
+      - isNotNull:
+          path: spec.selector.matchLabels
+      - isNotNull:
+          path: spec.template.metadata.labels
+  - it: should return correct image information
+    set:
+      imageName: nginx
+      imageTag: latest
+      workload: deployment
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: nginx:latest
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+  - it: should return correct image pull policy
+    values:
+      - ./values/deploy-only.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: IfNotPresent
+  - it: should exclude undefined yaml data
+    values:
+      - ./values/deploy-only.yaml
+    asserts:
+      - isNull:
+          path: spec.replicas
+      - isNull:
+          path: spec.strategy
+      - isNull:
+          path: spec.template.metadata.annotations
+      - isNull:
+          path: spec.template.spec.containers[0].args
+      - isNull:
+          path: spec.template.spec.containers[0].env
+      - isNull:
+          path: spec.template.spec.containers[0].resources
+      - isNull:
+          path: spec.template.spec.containers[0].volumeMounts
+      - isNull:
+          path: spec.template.spec.nodeSelector
+      - isNull:
+          path: spec.template.spec.tolerations
+      - isNull:
+          path: spec.template.spec.topologySpreadConstraits
+      - isNull:
+          path: spec.template.spec.volumes

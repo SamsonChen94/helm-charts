@@ -1,0 +1,8 @@
+## Main workload definition.
+## Valid values: deployment, statefulset, daemonset, or cronjob
+workload: deployment
+
+## Image configuration
+imageName: nginx
+imageTag: latest
+imagePullPolicy: IfNotPresent

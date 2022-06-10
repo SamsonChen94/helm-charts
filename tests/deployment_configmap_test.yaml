@@ -1,0 +1,70 @@
+suite: test deployment with config map
+templates:
+  - deployment.yaml
+  - configMap.yaml
+tests:
+  - it: should return correct document count
+    values:
+      - ./values/deploy-cm.yaml
+    release:
+      name: test
+      namespace: testing-ns
+      isUpgrade: true
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: deployment.yaml
+      - hasDocuments:
+          count: 1
+        template: configMap.yaml
+  - it: should contain checksum annotation for configmaps
+    values:
+      - ./values/deploy-cm.yaml
+    asserts:
+      - isNotNull:
+          path: spec.template.metadata.annotations
+        template: deployment.yaml
+  - it: should return configmap as container environment variables
+    values:
+      - ./values/deploy-cm.yaml
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.containers[0].env
+        template: deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].env[0]
+          value:
+            name: key1
+            valueFrom:
+              configMapKeyRef:
+                name: RELEASE-NAME-cm
+                key: key1
+        template: deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].env[1]
+          value:
+            name: key2
+            valueFrom:
+              configMapKeyRef:
+                name: RELEASE-NAME-cm
+                key: key2
+        template: deployment.yaml
+  - it: should return configmap as container mounted file
+    values:
+      - ./values/deploy-cm.yaml
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.containers[0].volumeMounts
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            mountPath: /mount/config
+            name: config
+      - isNotNull:
+          path: spec.template.spec.volumes
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            configMap:
+              name: RELEASE-NAME-cm
+            name: config
