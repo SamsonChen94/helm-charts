@@ -68,6 +68,19 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: IfNotPresent
+  - it: should return container data for additional container
+    values:
+      - ./values/deploy-only.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: nginx:v1.0.0
+      - equal:
+          path: spec.template.spec.containers[1].imagePullPolicy
+          value: IfNotPresent
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: secondary-container
   - it: should exclude undefined yaml data
     values:
       - ./values/deploy-only.yaml
@@ -86,6 +99,14 @@ tests:
           path: spec.template.spec.containers[0].resources
       - isNull:
           path: spec.template.spec.containers[0].volumeMounts
+      - isNull:
+          path: spec.template.spec.containers[1].args
+      - isNull:
+          path: spec.template.spec.containers[1].env
+      - isNull:
+          path: spec.template.spec.containers[1].resources
+      - isNull:
+          path: spec.template.spec.containers[1].volumeMounts
       - isNull:
           path: spec.template.spec.nodeSelector
       - isNull:

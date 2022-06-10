@@ -6,3 +6,11 @@ workload: deployment
 imageName: nginx
 imageTag: latest
 imagePullPolicy: IfNotPresent
+
+## Additional container configurations. Use this section if multiple containers
+## are required to run in the same Kubernetes pod
+additionalContainers:
+  - name: secondary-container
+    imageName: nginx
+    imageTag: v1.0.0
+    imagePullPolicy: IfNotPresent
