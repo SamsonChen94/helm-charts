@@ -14,3 +14,14 @@ configurations:
   strings:
     key1: value1
     key2: value2
+
+additionalContainers:
+  - name: secondary-container
+    imageName: nginx
+    imageTag: v1.0.0
+    imagePullPolicy: IfNotPresent
+    configurations:
+      files:
+        - config3.sh
+      strings:
+        key3: value3
