@@ -6,6 +6,25 @@
 {{- $configArgs := dict "config" .Values.configurations "configOutput" (dict) }}
 {{- include "configEnabledCheck" $configArgs }}
 {{- if or $configArgs.configOutput.configFile $configArgs.configOutput.configString }}
+{{- $configDataFiles := $configArgs.config.files }}
+{{- $configDataStrings := $configArgs.config.strings }}
+{{- /*
+  Checking for additional configuration from additional containers.
+  Loops each additional container and find the additional configurations, if any
+  Appends all additional configurations into exiting $configArgs.config dictionary
+*/}}
+{{- if .Values.additionalContainers }}
+{{- range $extraContainer := .Values.additionalContainers }}
+{{- if $extraContainer.configurations }}
+{{- if $extraContainer.configurations.files }}
+{{- $configDataFiles = concat $configArgs.config.files $extraContainer.configurations.files }}
+{{- end }}
+{{- if $extraContainer.configurations.strings }}
+{{- $configDataStrings = mustMerge $configArgs.config.strings $extraContainer.configurations.strings }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
 apiVersion: v1
 data:
   {{- /*
@@ -18,7 +37,7 @@ data:
   */}}
   {{- if $configArgs.configOutput.configFile }}
   {{- $directory := .Files.Glob "config/**" }}
-  {{- range $file := $configArgs.config.files }}
+  {{- range $file := $configDataFiles }}
   {{- $fileExists := false }}
   {{- range $path, $_ := $directory }}
   {{- $filename := split "/" $path }}
@@ -37,7 +56,7 @@ data:
     Config maps as variables
   */}}
   {{- if $configArgs.configOutput.configString }}
-  {{- range $key, $value := $configArgs.config.strings }}
+  {{- range $key, $value := $configDataStrings }}
   {{ $key }}: {{ $value }}
   {{- end }}
   {{- end }}

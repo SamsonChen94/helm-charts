@@ -63,3 +63,12 @@ tests:
       - equal:
           path: data.key2
           value: value2
+  - it: should get configurations from additional containers
+    values:
+      - ./values/cm-only.yaml
+    asserts:
+      - isNotNull:
+          path: data.config3\.sh
+      - equal:
+          path: data.key3
+          value: value3
