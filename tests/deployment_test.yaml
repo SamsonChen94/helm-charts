@@ -81,12 +81,37 @@ tests:
       - equal:
           path: spec.template.spec.containers[1].name
           value: secondary-container
+  - it: should contain rolling update as scaling strategy
+    values:
+      - ./values/deploy-only.yaml
+    asserts:
+      - isNotNull:
+          path: spec.strategy
+      - equal:
+          path: spec.strategy.type
+          value: RollingUpdate
+      - equal:
+          path: spec.strategy.maxSurge
+          value: 3
+      - equal:
+          path: spec.strategy.maxUnavailable
+          value: 0
+  - it: should contain recreate as scaling strategy
+    set:
+      workload: deployment
+      imageName: nginx
+      imageTag: latest
+      scalingConfig.type: Recreate
+    asserts:
+      - isNotNull:
+          path: spec.strategy
+      - equal:
+          path: spec.strategy.type
+          value: Recreate
   - it: should exclude undefined yaml data
     values:
       - ./values/deploy-only.yaml
     asserts:
-      - isNull:
-          path: spec.strategy
       - isNull:
           path: spec.template.metadata.annotations
       - isNull:

@@ -4,6 +4,11 @@ imageName: nginx
 imageTag: latest
 imagePullPolicy: IfNotPresent
 
+scalingConfig:
+  maxSurge: 3
+  maxUnavailable: 0
+  type: RollingUpdate
+
 additionalContainers:
   - name: secondary-container
     imageName: nginx
