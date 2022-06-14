@@ -1,0 +1,42 @@
+workload: deployment
+
+services:
+  headlessClusterIP:
+    portConfigs:
+      - name: name-0
+        containerPort: 8080
+        containerProtocol: TCP
+        servicePort: 8080
+      - name: name-1
+        containerPort: 8080
+        containerProtocol: UDP
+        servicePort: 8080
+  clusterIP:
+    portConfigs:
+      - name: name-2
+        containerPort: 8081
+      - name: name-3
+        containerPort: 8082
+  nodePort:
+    portConfigs:
+      - name: name-4
+        containerPort: 8083
+      - name: name-5
+        containerPort: 8080
+  loadBalancer:
+    portConfigs:
+      - name: name-6
+        containerPort: 8084
+      - name: name-7
+        containerPort: 8085
+    staticIP: 118.163.7.130
+    whitelistedIPs:
+      - 10.0.0.0/8
+      - 118.163.7.135/32
+  internalLoadBalancer:
+    portConfigs:
+      - name: name-8
+        containerPort: 8086
+    staticIP: 10.10.225.255
+    whitelistedIPs:
+      - 10.0.0.0/8

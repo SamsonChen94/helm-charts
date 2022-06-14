@@ -1,0 +1,236 @@
+suite: test service only
+templates:
+  - service.yaml
+tests:
+  - it: should result in an empty file
+    release:
+      name: test
+      namespace: testing-ns
+      isUpgrade: true
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: should return correct metadata information
+    set:
+      workload: deployment
+      services:
+        clusterIP:
+          portConfigs:
+            - name: name-0
+              containerPort: 8080
+    release:
+      name: test
+      namespace: testing-ns
+      isUpgrade: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isAPIVersion:
+          of: v1
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: test-clusterip-svc
+      - equal:
+          path: metadata.namespace
+          value: testing-ns
+      - isNotNull:
+          path: metadata.labels
+  - it: should return correct data for headless cluster IP
+    set:
+      workload: deployment
+      services:
+        headlessClusterIP:
+          portConfigs:
+            - name: name-0
+              containerPort: 8080
+    asserts:
+      - equal:
+          path: spec.clusterIP
+          value: None
+      - isNull:
+          path: metadata.annotations
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - isNull:
+          path: spec.loadBalancerIP
+      - isNull:
+          path: spec.loadBalancerSourceRanges
+  - it: should return correct data for cluster IP
+    set:
+      workload: deployment
+      services:
+        clusterIP:
+          portConfigs:
+            - name: name-0
+              containerPort: 8080
+    asserts:
+      - isNull:
+          path: spec.clusterIP
+      - isNull:
+          path: metadata.annotations
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - isNull:
+          path: spec.loadBalancerIP
+      - isNull:
+          path: spec.loadBalancerSourceRanges
+  - it: should return correct data for node port
+    set:
+      workload: deployment
+      services:
+        nodePort:
+          portConfigs:
+            - name: name-0
+              containerPort: 8080
+    asserts:
+      - isNull:
+          path: spec.clusterIP
+      - isNull:
+          path: metadata.annotations
+      - equal:
+          path: spec.type
+          value: NodePort
+      - isNull:
+          path: spec.loadBalancerIP
+      - isNull:
+          path: spec.loadBalancerSourceRanges
+  - it: should return correct data for load balancer
+    set:
+      workload: deployment
+      services:
+        loadBalancer:
+          portConfigs:
+            - name: name-0
+              containerPort: 8080
+          staticIP: 118.163.7.135
+          whitelistedIPs:
+            - 10.0.0.0/8
+            - 118.163.7.135/32
+    asserts:
+      - isNull:
+          path: spec.clusterIP
+      - isNull:
+          path: metadata.annotations
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+      - equal:
+          path: spec.loadBalancerIP
+          value: 118.163.7.135
+      - contains:
+          path: spec.loadBalancerSourceRanges
+          content: 10.0.0.0/8
+      - contains:
+          path: spec.loadBalancerSourceRanges
+          content: 118.163.7.135/32
+  - it: should return correct data for internal load balancer
+    set:
+      workload: deployment
+      services:
+        internalLoadBalancer:
+          portConfigs:
+            - name: name-0
+              containerPort: 8080
+          staticIP: 10.0.225.255
+          whitelistedIPs:
+            - 10.0.0.0/8
+    asserts:
+      - isNull:
+          path: spec.clusterIP
+      - isNotNull:
+          path: metadata.annotations
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+      - equal:
+          path: spec.loadBalancerIP
+          value: 10.0.225.255
+      - contains:
+          path: spec.loadBalancerSourceRanges
+          content: 10.0.0.0/8
+  - it: should return multiple services
+    values:
+      - ./values/svc-only.yaml
+    asserts:
+      - hasDocuments:
+          count: 5
+  - it: should return correct port data for clusterIP
+    values:
+      - ./values/svc-only.yaml
+    asserts:
+      - equal:
+          path: spec.ports
+          value:
+            - name: name-2
+              targetPort: 8081
+              protocol: TCP
+              port: 8081
+            - name: name-3
+              targetPort: 8082
+              protocol: TCP
+              port: 8082
+        documentIndex: 0
+  - it: should return correct port data for headless clusterIP
+    values:
+      - ./values/svc-only.yaml
+    asserts:
+      - equal:
+          path: spec.ports
+          value:
+            - name: name-0
+              targetPort: 8080
+              protocol: TCP
+              port: 8080
+            - name: name-1
+              targetPort: 8080
+              protocol: UDP
+              port: 8080
+        documentIndex: 1
+  - it: should return correct port data for internalLoadBalancer
+    values:
+      - ./values/svc-only.yaml
+    asserts:
+      - equal:
+          path: spec.ports
+          value:
+            - name: name-8
+              targetPort: 8086
+              protocol: TCP
+              port: 8086
+        documentIndex: 2
+  - it: should return correct port data for loadBalancer
+    values:
+      - ./values/svc-only.yaml
+    asserts:
+      - equal:
+          path: spec.ports
+          value:
+            - name: name-6
+              targetPort: 8084
+              protocol: TCP
+              port: 8084
+            - name: name-7
+              targetPort: 8085
+              protocol: TCP
+              port: 8085
+        documentIndex: 3
+  - it: should return correct port data for nodePort
+    values:
+      - ./values/svc-only.yaml
+    asserts:
+      - equal:
+          path: spec.ports
+          value:
+            - name: name-4
+              targetPort: 8083
+              protocol: TCP
+              port: 8083
+            - name: name-5
+              targetPort: 8080
+              protocol: TCP
+              port: 8080
+        documentIndex: 4

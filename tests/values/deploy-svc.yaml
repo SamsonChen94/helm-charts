@@ -1,0 +1,32 @@
+workload: deployment
+
+imageName: nginx
+imageTag: latest
+
+services:
+  clusterIP:
+    portConfigs:
+      - name: name-0
+        containerPort: 8080
+        containerProtocol: TCP
+        servicePort: 8080
+      - name: name-1
+        containerPort: 8081
+        containerProtocol: UDP
+        servicePort: 8080
+  nodePort:
+    portConfigs:
+      - name: name-2
+        containerPort: 8080
+      - name: name-3
+        containerPort: 8081
+
+additionalContainers:
+  - name: secondary-container
+    imageName: nginx
+    imageTag: v1.0.0
+    services:
+      clusterIP:
+        portConfigs:
+          - name: name-0
+            containerPort: 8080

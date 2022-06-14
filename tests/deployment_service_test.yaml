@@ -1,0 +1,75 @@
+suite: test deployment with services
+templates:
+  - deployment.yaml
+  - service.yaml
+tests:
+  - it: should return correct document count
+    values:
+      - ./values/deploy-svc.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: deployment.yaml
+      - hasDocuments:
+          count: 2
+        template: service.yaml
+  - it: should return correct information for service-less container port
+    set:
+      workload: deployment
+      imageName: nginx
+      imageTag: latest
+      services:
+        none:
+          portConfigs:
+            - name: name-0
+              containerPort: 8080
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: service.yaml
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 8080
+            name: name-0
+            protocol: TCP
+        template: deployment.yaml
+  - it: should have correct deployment information all container ports
+    values:
+      - ./values/deploy-svc.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 8080
+            name: name-0
+            protocol: TCP
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 8081
+            name: name-1
+            protocol: UDP
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 8080
+            name: name-2
+            protocol: TCP
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 8081
+            name: name-3
+            protocol: TCP
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[1].ports
+          content:
+            containerPort: 8080
+            name: name-0
+            protocol: TCP
+        template: deployment.yaml

@@ -6,10 +6,6 @@ tests:
   - it: should return correct document count
     values:
       - ./values/deploy-cm.yaml
-    release:
-      name: test
-      namespace: testing-ns
-      isUpgrade: true
     asserts:
       - hasDocuments:
           count: 1
