@@ -13,7 +13,20 @@
 # imageName: nginx
 # imagePullPolicy: IfNotPresent
 
-## Scaling configuration
+## Scaling configuration. Should only apply when workload is deployment. In most
+## cases, a 'RollingUpdate' is recommended. However, in the case of stateful
+## workloads on deployments (i.e.: deployment workload with mounted persistent
+## volumes), 'Recreate' would be recommended.
+## Ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+# scalingConfig:
+#   maxSurge: 1
+#   maxUnavailable: 0
+#   type: RollingUpdate
+
+## Horizontal pod autoscaling configuration. Should only apply when workload is
+## either deployment or stateful set. Currently only supports scaling by CPU
+## utilization.
+## TODO: add custom metrics support and memory utilization scaling
 # hpa:
 #   enabled: true
 #   min: 1

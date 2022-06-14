@@ -39,6 +39,22 @@ spec:
     */}}
     matchLabels:
       {{- include "selectorLabels" . | nindent 6 }}
+  {{- if .Values.scalingConfig }}
+  strategy:
+    {{- if eq .Values.scalingConfig.type "RollingUpdate" }}
+    rollingUpdate:
+      maxSurge: {{ .Values.scalingConfig.maxSurge | default 1 }}
+      maxUnavailable: {{ .Values.scalingConfig.maxUnavailable | default 0 }}
+    type: {{ .Values.scalingConfig.type }}
+    {{- else if eq .Values.scalingConfig.type "Recreate" }}
+    {{- if or .Values.scalingConfig.maxSurge .Values.scalingConfig.maxUnavailable }}
+    {{- fail ( printf "\n\nError --> maxSurge and maxUnavailable are not compatible with 'Recreate' scalingConfig type\n" ) -}}
+    {{- end }}
+    type: {{ .Values.scalingConfig.type }}
+    {{- else }}
+    {{- fail ( printf "\n\nError --> Unsupported scaling type %s\n" .Values.scalingConfig.type ) -}}
+    {{- end }}
+  {{- end }}
   template:
     metadata:
       {{- /*
