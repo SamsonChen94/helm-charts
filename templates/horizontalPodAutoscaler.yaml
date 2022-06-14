@@ -1,0 +1,33 @@
+{{- $hpaArgs := dict "hpa" .Values.hpa "hpaOutput" (dict) }}
+{{- include "hpaEnabled" $hpaArgs }}
+{{- if $hpaArgs.hpaOutput.hpaEnabled }}
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  labels:
+    {{- include "labels" . | nindent 4 }}
+  name: {{ template "fullname" . }}-hpa
+  namespace: {{ .Release.Namespace }}
+spec:
+  maxReplicas: {{ required "\n\nError: --> hpa.max is required when HPA is enabled" .Values.hpa.max }}
+  metrics:
+    {{- if .Values.hpa.targetCPU }}
+    - resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.hpa.targetCPU }}
+      type: Resource
+    {{- else }}
+    {{- fail ( printf "\n\nError --> Scaling target metrics not found.\n" ) -}}
+    {{- end }}
+  minReplicas: {{ required "\n\nError: --> hpa.min is required when HPA is enabled" .Values.hpa.min }}
+  scaleTargetRef:
+    {{- if eq .Values.workload "deployment" }}
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ template "fullname" . }}-deploy
+    {{- else }}
+    {{- fail ( printf "\n\nError --> Unsupported HPA target reference for workload %s\n" .Values.workload ) -}}
+    {{- end }}
+{{- end }}

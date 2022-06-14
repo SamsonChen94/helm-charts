@@ -66,3 +66,22 @@ app: {{ template "fullname" . }}
     {{- $_ := set .configOutput "configString" false }}
   {{- end -}}
 {{- end -}}
+
+{{/*
+  Check if horizontal pod autoscaler is enabled. Returns 'hpaEnabled' as a boolean.
+  Note: Helm templates do not implement full-fledge functions. Below is an
+        implementation of 'returning' a result, abide in a very weird way
+  Reference: https://dastrobu.medium.com/are-helm-charts-turing-complete-46ea7a540ca2
+             https://blog.flant.com/advanced-helm-templating/
+*/}}
+{{- define "hpaEnabled" -}}
+  {{- if .hpa -}}
+    {{- if .hpa.enabled -}}
+      {{- $_ := set .hpaOutput "hpaEnabled" true }}
+    {{- else -}}
+      {{- $_ := set .hpaOutput "hpaEnabled" false }}
+    {{- end -}}
+  {{- else -}}
+    {{- $_ := set .hpaOutput "hpaEnabled" false }}
+  {{- end -}}
+{{- end -}}

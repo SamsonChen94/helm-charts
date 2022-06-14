@@ -7,6 +7,8 @@
 {{- if eq .Values.workload "deployment" }}
 {{- $configArgs := dict "config" .Values.configurations "configOutput" (dict) }}
 {{- include "configEnabledCheck" $configArgs }}
+{{- $hpaArgs := dict "hpa" .Values.hpa "hpaOutput" (dict) }}
+{{- include "hpaEnabled" $hpaArgs }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,6 +19,16 @@ metadata:
 spec:
   minReadySeconds: 10
   progressDeadlineSeconds: 600
+  {{- /*
+    Sets the deployment's replica count. In the case of HPA being enabled, there
+    is a case whereby the workload will take the new replica count before HPA
+    kicks, effectively terminating pods before it is ready to be rolled over.
+  */}}
+  {{- if $hpaArgs.hpaOutput.hpaEnabled }}
+  replicas: {{ $hpaArgs.hpa.minReplicas }}
+  {{- else }}
+  replicas: {{ .Values.replicas | default 1 }}
+  {{- end }}
   revisionHistoryLimit: 3
   selector:
     {{- /*
