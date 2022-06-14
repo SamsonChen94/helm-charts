@@ -91,10 +91,10 @@ tests:
           path: spec.strategy.type
           value: RollingUpdate
       - equal:
-          path: spec.strategy.maxSurge
+          path: spec.strategy.rollingUpdate.maxSurge
           value: 3
       - equal:
-          path: spec.strategy.maxUnavailable
+          path: spec.strategy.rollingUpdate.maxUnavailable
           value: 0
   - it: should contain recreate as scaling strategy
     set:
