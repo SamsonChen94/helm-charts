@@ -1,0 +1,46 @@
+{{- if and .Values.services .Values.workload }}
+{{- range $key, $service := .Values.services }}
+{{- if ne $key "none" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  {{- if eq $key "internalLoadBalancer" }}
+  annotations:
+    cloud.google.com/load-balancer-type: "Internal"
+  {{- end }}
+  labels:
+    {{- include "labels" $ | nindent 4 }}
+  name: {{ template "fullname" $ }}-{{ $key | lower }}-svc
+  namespace: {{ $.Release.Namespace }}
+spec:
+  {{- if eq $key "headlessClusterIP" }}
+  clusterIP: None
+  {{- end }}
+  {{- if or ( eq $key "loadBalancer" ) ( eq $key "internalLoadBalancer" ) }}
+  {{- if $service.staticIP }}
+  loadBalancerIP: {{ $service.staticIP }}
+  {{- end }}
+  {{- if $service.whitelistedIPs }}
+  loadBalancerSourceRanges:
+    {{- toYaml $service.whitelistedIPs | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  ports:
+    {{- include "servicePorts" $service.portConfigs | indent 4 }}
+  selector:
+    {{- include "selectorLabels" $ | nindent 4 }}
+  {{- if or ( eq $key "clusterIP" ) ( eq $key "headlessClusterIP" ) }}
+  type: ClusterIP
+  {{- else if or ( eq $key "loadBalancer" ) ( eq $key "internalLoadBalancer" ) }}
+  type: LoadBalancer
+  {{- else if eq $key "nodePort" }}
+  type: NodePort
+  {{- else if eq $key "none" }}
+  {{- /* no operation */}}
+  {{- else }}
+  {{- fail ( printf "\n\nError --> unsupported service type %s\n" $key ) -}}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

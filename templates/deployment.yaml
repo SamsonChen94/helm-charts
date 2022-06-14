@@ -89,9 +89,7 @@ spec:
           {{- include "imageNameTag" .Values }}
           imagePullPolicy: {{ .Values.imagePullPolicy | default "Always" }}
           name: {{ template "fullname" . }}
-          ports:
-            - containerPort: {{ .Values.containerPort | default "8080" }}
-              protocol: {{ .Values.containerProtocol | default "TCP" }}
+          {{- include "workloadPortConfig" .Values.services | indent 10 }}
           {{- /*
             Configure volume mounts to the working container. Note that
             environment variables from config maps and secrets do not require
@@ -126,9 +124,7 @@ spec:
           {{- include "imageNameTag" $additionalContainer }}
           imagePullPolicy: {{ $additionalContainer.imagePullPolicy | default "Always" }}
           name: {{ $additionalContainer.name }}
-          ports:
-            - containerPort: {{ $.Values.containerPort | default "8080" }}
-              protocol: {{ $.Values.containerProtocol | default "TCP" }}
+          {{- include "workloadPortConfig" $additionalContainer.services | indent 10 }}
           {{- /*
             Configure volume mounts to the working container. Note that
             environment variables from config maps and secrets do not require
