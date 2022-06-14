@@ -5,7 +5,7 @@
 ## Apple macOS custom attributes file
 .DS_Store
 
-## Common VCS dirs
+## Common VCS directory and files
 .git/
 .gitignore
 .bzr/
@@ -13,6 +13,8 @@
 .hg/
 .hgignore
 .svn/
+README.md
+LICENSE
 
 ## Common backup files
 *.swp
@@ -29,3 +31,6 @@
 
 ## Helm unit test
 tests/
+
+## Helm script
+helm.sh

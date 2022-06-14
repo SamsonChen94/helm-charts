@@ -1,6 +1,6 @@
 apiVersion: v2
 name: helmCharts
-version: 0.7.0
+version: 0.8.0
 kubeVersion: ">= 1.19.0-0"
 description: Universal Helm chart template to be used for all future Helm deployments
 type: application
