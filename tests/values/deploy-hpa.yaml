@@ -1,0 +1,12 @@
+workload: deployment
+
+replicas: 2
+
+imageName: nginx
+imageTag: latest
+
+hpa:
+  enabled: true
+  min: 3
+  max: 4
+  targetCPU: 80

@@ -1,0 +1,46 @@
+suite: test deployment with horizontal pod autoscaler
+templates:
+  - deployment.yaml
+  - horizontalPodAutoscaler.yaml
+tests:
+  - it: should return correct document count
+    values:
+      - ./values/deploy-hpa.yaml
+    release:
+      name: test
+      namespace: testing-ns
+      isUpgrade: true
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: deployment.yaml
+      - hasDocuments:
+          count: 1
+        template: horizontalPodAutoscaler.yaml
+  - it: should return deployment replica information without hpa enabled
+    set:
+      workload: deployment
+      imageName: nginx
+      imageTag: latest
+      replicas: 3
+      hpa.min: 2
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+        template: deployment.yaml
+      - hasDocuments:
+          count: 0
+        template: horizontalPodAutoscaler.yaml
+  - it: should return deployment replica information with hpa enabled
+    values:
+      - ./values/deploy-hpa.yaml
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+        template: deployment.yaml
+      - equal:
+          path: spec.minReplicas
+          value: 3
+        template: horizontalPodAutoscaler.yaml

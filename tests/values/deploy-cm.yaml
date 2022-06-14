@@ -1,13 +1,8 @@
-## Main workload definition.
-## Valid values: deployment, statefulset, daemonset, or cronjob
 workload: deployment
 
-## Image configuration
 imageName: nginx
 imageTag: latest
 
-## Inject configuration files or environment variables into deployment via
-## configuration mapping
 configurations:
   files:
     - config.conf

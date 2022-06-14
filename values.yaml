@@ -5,9 +5,20 @@
 ## Valid values: deployment, statefulset, daemonset, or cronjob
 # workload: deployment
 
+## Pod replica count. Does not apply to cronjobs. Defaults to 1
+## NOTE: setting hpa.enabled to true will override this setting
+# replicas: 1
+
 ## Image configuration
 # imageName: nginx
 # imagePullPolicy: IfNotPresent
+
+## Scaling configuration
+# hpa:
+#   enabled: true
+#   min: 1
+#   max: 4
+#   targetCPU: 80
 
 ## Inject configuration files or environment variables into deployment via
 ## configuration mapping

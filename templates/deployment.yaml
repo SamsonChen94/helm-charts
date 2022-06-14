@@ -25,7 +25,7 @@ spec:
     kicks, effectively terminating pods before it is ready to be rolled over.
   */}}
   {{- if $hpaArgs.hpaOutput.hpaEnabled }}
-  replicas: {{ $hpaArgs.hpa.minReplicas }}
+  replicas: {{ $hpaArgs.hpa.min }}
   {{- else }}
   replicas: {{ .Values.replicas | default 1 }}
   {{- end }}

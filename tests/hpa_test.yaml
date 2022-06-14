@@ -1,0 +1,66 @@
+suite: test horizontal pod autoscaler
+templates:
+  - horizontalPodAutoscaler.yaml
+tests:
+  - it: should result in an empty file
+    release:
+      name: test
+      namespace: testing-ns
+      isUpgrade: true
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: should return correct metadata information
+    values:
+      - ./values/hpa-only.yaml
+    release:
+      name: test
+      namespace: testing-ns
+      isUpgrade: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isAPIVersion:
+          of: autoscaling/v2beta2
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: metadata.name
+          value: test-hpa
+      - equal:
+          path: metadata.namespace
+          value: testing-ns
+      - isNotNull:
+          path: metadata.labels
+      - equal:
+          path: spec.maxReplicas
+          value: 2
+      - equal:
+          path: spec.minReplicas
+          value: 1
+  - it: should return deployment scaling reference target
+    values:
+      - ./values/hpa-only.yaml
+    asserts:
+      - equal:
+          path: spec.scaleTargetRef.apiVersion
+          value: apps/v1
+      - equal:
+          path: spec.scaleTargetRef.kind
+          value: Deployment
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: RELEASE-NAME-deploy
+  - it: should return correct metrics scaling indicators
+    values:
+      - ./values/hpa-only.yaml
+    asserts:
+      - contains:
+          path: spec.metrics
+          content:
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 80
+            type: Resource

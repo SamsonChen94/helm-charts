@@ -1,5 +1,3 @@
-## Inject configuration files or environment variables into deployment via
-## configuration mapping
 configurations:
   files:
     - config.conf

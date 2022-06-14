@@ -69,6 +69,7 @@ app: {{ template "fullname" . }}
 
 {{/*
   Check if horizontal pod autoscaler is enabled. Returns 'hpaEnabled' as a boolean.
+  Also checks if min replica is a valid number (not greater than max replica).
   Note: Helm templates do not implement full-fledge functions. Below is an
         implementation of 'returning' a result, abide in a very weird way
   Reference: https://dastrobu.medium.com/are-helm-charts-turing-complete-46ea7a540ca2
@@ -77,6 +78,9 @@ app: {{ template "fullname" . }}
 {{- define "hpaEnabled" -}}
   {{- if .hpa -}}
     {{- if .hpa.enabled -}}
+      {{- if gt .hpa.min .hpa.max -}}
+      {{- fail ( printf "\n\nError --> minReplicas cannot be a value larger than maxReplicas\n" ) -}}
+      {{- end -}}
       {{- $_ := set .hpaOutput "hpaEnabled" true }}
     {{- else -}}
       {{- $_ := set .hpaOutput "hpaEnabled" false }}

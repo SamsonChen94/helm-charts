@@ -86,8 +86,6 @@ tests:
       - ./values/deploy-only.yaml
     asserts:
       - isNull:
-          path: spec.replicas
-      - isNull:
           path: spec.strategy
       - isNull:
           path: spec.template.metadata.annotations
