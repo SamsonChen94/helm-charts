@@ -1,3 +1,11 @@
+{{- /*
+  This resource is only for horizontal pod autoscalers (HPA). HPAs function as
+  scaling mechanisms for workloads such as deployments and stateful sets. As
+  for the scaling metric multiple forms of metrics from multiple sources can be
+  used to scale a workload up or down. HPAs support scaling on multiple metrics
+  (i.e. scaling for CPU and memory).
+  Ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale
+*/}}
 {{- $hpaArgs := dict "hpa" .Values.hpa "hpaOutput" (dict) }}
 {{- include "hpaEnabled" $hpaArgs }}
 {{- if $hpaArgs.hpaOutput.hpaEnabled }}

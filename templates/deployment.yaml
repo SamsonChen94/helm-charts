@@ -2,7 +2,10 @@
   This resource is only for deployments. One of the main workloads in a
   Kubernetes environment. When paired with other Kubernetes resources like
   services, config maps, secrets, and horizontal pod autoscalers, this resource
-  will have different YAML configurations.
+  will have different YAML configurations. Internally, deployments act as a
+  template for the actual pods to run and generates replica sets which in turn,
+  creates the necessary pods for business functionalities.
+  Ref: https://kubernetes.io/docs/tasks/run-application/run-stateless-application-deployment
 */}}
 {{- if eq .Values.workload "deployment" }}
 {{- $configArgs := dict "config" .Values.configurations "configOutput" (dict) }}

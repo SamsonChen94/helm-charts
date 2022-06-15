@@ -1,7 +1,11 @@
 {{- /*
   This resource is only for config maps. Data stored in config maps will be
   injected into the workload post-deployment. Config maps can store either
-  strings or files
+  strings or files. This implementation assumes all environment variables from
+  the workload are defined inside config maps. This means strings are injected
+  as environment variables via 'env' definition and files are injected as file
+  mounted objects via the 'mountVolume' and 'volume' definitions.
+  Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap
 */}}
 {{- $configArgs := dict "config" .Values.configurations "configOutput" (dict) }}
 {{- include "configEnabledCheck" $configArgs }}
