@@ -149,3 +149,49 @@ ports:
   targetPort: {{ required "\n\nError --> each defined k8s service must have a defined containerPort" $port.containerPort }}
   {{- end -}}
 {{- end -}}
+
+{{/*
+  Check if ingress is enabled. Returns 'ingEnabled' as a boolean. Also checks
+  for the following:
+    1. That a Kubernetes service with NodePort type is also configured
+    2. ingress.ingressConfig is empty or null, error out if so
+    3. ingress.ingressConfig[].targets is emtpy or null, error out if so
+    4. ingress.ingressConfig[].targets[].serviceTargets is empty or null, error out if so
+    5. That the servicePort/containerPort defined in ingress is also defined with a NodePort service
+  Note: Helm templates do not implement full-fledge functions. Below is an
+        implementation of 'returning' a result, abide in a very weird way
+  Reference: https://dastrobu.medium.com/are-helm-charts-turing-complete-46ea7a540ca2
+             https://blog.flant.com/advanced-helm-templating/
+*/}}
+{{- define "ingEnabled" -}}
+  {{- if .ing.ingress -}}
+    {{- if .ing.ingress.enabled -}}
+      {{- $_ := set .ingOutput "ingEnabled" true -}}
+      {{- if not .ing.ingress.ingressConfig -}}
+        {{- fail ( printf "\n\nError --> missing ingressConfig\n" ) -}}
+      {{- end -}}
+      {{- if not .ing.services -}}
+        {{- fail ( printf "\n\nError --> nodePort configuration not found\n" ) -}}
+      {{- else if not .ing.services.nodePort }}
+        {{- fail ( printf "\n\nError --> nodePort configuration not found\n" ) -}}
+      {{- end -}}
+      {{- $definedServicePortList := (list) -}}
+      {{- range $servicePort := .ing.services.nodePort.portConfigs -}}
+        {{- $definedServicePortList = mustAppend $definedServicePortList ( $servicePort.servicePort | default $servicePort.containerPort ) -}}
+      {{- end -}}
+      {{- range $value := ( required "\n\nError --> missing ingressConfig in ingress settings" .ing.ingress.ingressConfig ) -}}
+        {{- range $target := ( required "\n\nError --> missing targets in ingressConfig settings" $value.targets ) -}}
+          {{- range $servicePort := ( required "\n\nError --> missing serviceTargets in ingressConfig target settings" $target.serviceTargets ) -}}
+            {{- if not ( has $servicePort.servicePort $definedServicePortList ) -}}
+              {{- fail ( printf "\n\nError --> %s port not configured in NodePort service settings\n" ( $servicePort.servicePort | toString ) ) -}}
+            {{- end -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+    {{- else -}}
+      {{- $_ := set .ingOutput "ingEnabled" false -}}
+    {{- end -}}
+  {{- else -}}
+    {{- $_ := set .ingOutput "ingEnabled" false -}}
+  {{- end -}}
+{{- end -}}

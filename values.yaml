@@ -49,9 +49,15 @@
 #         containerPort: 8083
 #       - name: name-5
 #         containerPort: 8080
+#       - name: name-6
+#         containerPort: 8080
+#         servicePort: 8081
+#       - name: name-7
+#         containerPort: 8082
+#         servicePort: 8082
 #   loadBalancer:
 #     portConfigs:
-#       - name: name-6
+#       - name: name-8
 #         containerPort: 8084
 #     staticIP: 118.163.7.135
 #     whitelistedIPs:
@@ -59,24 +65,40 @@
 #       - 118.163.7.135/32
 #   internalLoadBalancer:
 #     portConfigs:
-#       - name: name-7
+#       - name: name-9
 #         containerPort: 8085
 #     staticIP: 10.10.225.255
 #     whitelistedIPs:
 #       - 10.0.0.0/8
 #       - 118.163.7.135/32
 
-## Ingress network configuration
+## Ingress network configuration. Should only apply when at least one NodePort
+## service type is configured. Please ensure each 'targetServicePort' is
+## defined in services.nodePort.portConfigs.
 ## NOTE: k8s ingresses to services is a many-to-many relation, meaning you can
 ##       assign multiple ingresses to multiple services
 # ingress:
-#   enabled: false
-#   ssl: false
-#   domainName: ""
-#   reservedIPName: ""
-#   domainPath: ""
-#   httpsRedirect: ""
-#   sslPolicy: ""
+#   enabled: true
+#   ingressConfig:
+#     - reservedIPName: "example-external-static-ip-name"
+#       ssl: false
+#       targets:
+#         - domainName: "example.com"
+#           serviceTargets:
+#             - domainPath: "/*"
+#               servicePort: 8080
+#             - domainPath: "/foo/*"
+#               servicePort: 8081
+#         - domainName: "example-2.com"
+#           serviceTargets:
+#             - domainPath: "/*"
+#               servicePort: 8080
+#     - reservedIPName: "example-external-static-ip-name-2"
+#       targets:
+#         - domainName: "example-3.com"
+#           serviceTargets:
+#             - domainPath: "/*"
+#               servicePort: 8082
 
 ## Scaling configuration. Should only apply when workload is deployment. In most
 ## cases, a 'RollingUpdate' is recommended. However, in the case of stateful

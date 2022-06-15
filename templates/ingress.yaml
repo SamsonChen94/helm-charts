@@ -1,0 +1,44 @@
+{{- /*
+  This resource is only for ingresses. Due to the difference in implementing
+  netowrk configurations, ingresses are very dependent on the underlining
+  service provider (i.e. AWS, GCP, Azure).
+  Ref: https://cloud.google.com/kubernetes-engine/docs/how-to/load-balance-ingress
+*/}}
+{{- $ingArgs := dict "ing" .Values "ingOutput" (dict) }}
+{{- include "ingEnabled" $ingArgs }}
+{{- if $ingArgs.ingOutput.ingEnabled }}
+{{- range $index, $value := $ingArgs.ing.ingress.ingressConfig }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    {{- if ne $value.reservedIPName "" }}
+    kubernetes.io/ingress.global-static-ip-name: {{ $value.reservedIPName }}
+    {{- end }}
+    {{- if $value.ssl }}
+    networking.gke.io/managed-certificates: {{ template "fullname" $ }}-{{ $index }}-mcrt
+    {{- end }}
+  labels:
+    {{- include "labels" $ | nindent 4 }}
+  name: {{ template "fullname" $ }}-{{ $index }}-ing
+  namespace: {{ $.Release.Namespace }}
+spec:
+  rules:
+    {{- range $target := $value.targets }}
+    - host: {{ required "\n\nError --> missing domainName" $target.domainName }}
+      http:
+        paths:
+          {{- range $servicePort := $target.serviceTargets }}
+          - backend:
+              service:
+                name: {{ template "fullname" $ }}-nodeport-svc
+                port:
+                  number: {{ required "\n\nError --> missing servicePort in ingress setting" $servicePort.servicePort }}
+            path: {{ required "\n\nError --> missing domainPath in ingress setting" $servicePort.domainPath }}
+            pathType: ImplementationSpecific
+          {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}
