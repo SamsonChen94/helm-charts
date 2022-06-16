@@ -6,6 +6,7 @@ tests:
   - it: should return correct document count
     values:
       - ./values/deploy-cm.yaml
+      - ./values/example.config.yaml
     asserts:
       - hasDocuments:
           count: 1
@@ -16,6 +17,7 @@ tests:
   - it: should contain checksum annotation for configmaps
     values:
       - ./values/deploy-cm.yaml
+      - ./values/example.config.yaml
     asserts:
       - isNotNull:
           path: spec.template.metadata.annotations
@@ -29,11 +31,13 @@ tests:
         files:
           - config.conf
         strings:
-          key1: value1
+          - key1
       additionalContainers:
         - name: secondary-container
           imageName: nginx
           imageTag: v1.0.0
+    values:
+      - ./values/example.config.yaml
     asserts:
       - isNotNull:
           path: spec.template.spec.containers[0].env
@@ -85,7 +89,9 @@ tests:
             files:
               - config3.sh
             strings:
-              key3: value3
+              - key3
+    values:
+      - ./values/example.config.yaml
     asserts:
       - isNull:
           path: spec.template.spec.containers[0].env
@@ -127,6 +133,7 @@ tests:
   - it: should return configmap as container environment variables
     values:
       - ./values/deploy-cm.yaml
+      - ./values/example.config.yaml
     asserts:
       - isNotNull:
           path: spec.template.spec.containers[0].env
@@ -164,6 +171,7 @@ tests:
   - it: should return configmap as container mounted file
     values:
       - ./values/deploy-cm.yaml
+      - ./values/example.config.yaml
     asserts:
       - isNotNull:
           path: spec.template.spec.containers[0].volumeMounts

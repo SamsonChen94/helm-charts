@@ -2,12 +2,12 @@ configurations:
   files:
     - config.conf
   strings:
-    key1: value1
-    key2: value2
+    - key1
+    - key2
 
 additionalContainers:
   - configurations:
       files:
         - config3.sh
       strings:
-        key3: value3
+        - key3

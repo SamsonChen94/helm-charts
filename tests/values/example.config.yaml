@@ -1,0 +1,13 @@
+configFiles:
+  config.conf: |
+    this is a config
+  config2.conf: |
+    this should not show
+  config3.sh: |
+    #!/bin/sh
+
+    echo "this is just an example"
+configStrings:
+  key1: value1
+  key2: value2
+  key3: value3

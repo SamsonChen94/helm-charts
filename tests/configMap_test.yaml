@@ -12,7 +12,9 @@ tests:
           count: 0
   - it: should return correct metadata information
     set:
-      configurations.strings.key1: value1
+      configurations.strings[0]: key1
+    values:
+      - ./values/example.config.yaml
     release:
       name: test
       namespace: testing-ns
@@ -35,25 +37,33 @@ tests:
   - it: should get configuration file data from config directory
     set:
       configurations.files[0]: config.conf
+    values:
+      - ./values/example.config.yaml
     asserts:
       - isNotNull:
           path: data.config\.conf
   - it: should skip configuration files not defined in values.yaml
     set:
       configurations.files[0]: config.conf
+    values:
+      - ./values/example.config.yaml
     asserts:
       - isNull:
           path: data.confing2\.conf
   - it: should get configuration string data from configurations
     set:
-      configurations.strings.key1: value1
+      configurations.strings[0]: key1
+    values:
+      - ./values/example.config.yaml
     asserts:
       - equal:
           path: data.key1
           value: value1
   - it: should skip configuration string not defined in values.yaml
     set:
-      configurations.strings.key1: value1
+      configurations.strings[0]: key1
+    values:
+      - ./values/example.config.yaml
     asserts:
       - isNull:
           path: data.key2
@@ -63,6 +73,8 @@ tests:
         - configurations:
             files:
               - config3.sh
+    values:
+      - ./values/example.config.yaml
     asserts:
       - isNotNull:
           path: data.config3\.sh
@@ -71,7 +83,9 @@ tests:
       additionalContainers:
         - configurations:
             strings:
-              key3: value3
+              - key3
+    values:
+      - ./values/example.config.yaml
     asserts:
       - isNotNull:
           path: data.key3
@@ -81,6 +95,7 @@ tests:
   - it: should get configurations from multiple sources
     values:
       - ./values/cm-only.yaml
+      - ./values/example.config.yaml
     asserts:
       - isNotNull:
           path: data.config\.conf
