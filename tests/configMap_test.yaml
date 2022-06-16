@@ -110,3 +110,11 @@ tests:
       - equal:
           path: data.key3
           value: value3
+  - it: should get string configurations from non-string values
+    set:
+      configurations.strings[0]: numberString
+      configStrings.numberString: '8080'
+    asserts:
+      - equal:
+          path: data.numberString
+          value: '8080'

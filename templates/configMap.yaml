@@ -42,7 +42,7 @@ data:
   {{- end }}
   {{- if $configDataStrings }}
   {{- range $configStringName := $configDataStrings }}
-  {{ $configStringName }}: {{ get $configArgs.config.configStrings ( printf $configStringName ) }}
+  {{ $configStringName }}: {{ get $configArgs.config.configStrings ( printf $configStringName ) | quote }}
   {{- end }}
   {{- end }}
 kind: ConfigMap
