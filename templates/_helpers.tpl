@@ -39,35 +39,6 @@ app: {{ template "fullname" . }}
 {{- end -}}
 
 {{/*
-  Check if the different configurations are enabled. Returns the 'configString'
-  and 'configFile', both as booleans.
-  Note: Helm templates do not implement full-fledge functions. Below is an
-        implementation of 'returning' a result, abide in a very weird way
-  Reference: https://dastrobu.medium.com/are-helm-charts-turing-complete-46ea7a540ca2
-             https://blog.flant.com/advanced-helm-templating/
-*/}}
-{{- define "configEnabledCheck" -}}
-  {{- if .config -}}
-    {{- if and .config.files .config.strings -}}
-      {{- $_ := set .configOutput "configFile" true }}
-      {{- $_ := set .configOutput "configString" true }}
-    {{- else if .config.files -}}
-      {{- $_ := set .configOutput "configFile" true }}
-      {{- $_ := set .configOutput "configString" false }}
-    {{- else if .config.strings -}}
-      {{- $_ := set .configOutput "configFile" false }}
-      {{- $_ := set .configOutput "configString" true }}
-    {{- else -}}
-      {{- $_ := set .configOutput "configFile" false }}
-      {{- $_ := set .configOutput "configString" false }}
-    {{- end -}}
-  {{- else -}}
-    {{- $_ := set .configOutput "configFile" false }}
-    {{- $_ := set .configOutput "configString" false }}
-  {{- end -}}
-{{- end -}}
-
-{{/*
   Check if horizontal pod autoscaler is enabled. Returns 'hpaEnabled' as a boolean.
   Also checks if min replica is a valid number (not greater than max replica).
   Note: Helm templates do not implement full-fledge functions. Below is an
@@ -193,5 +164,93 @@ ports:
     {{- end -}}
   {{- else -}}
     {{- $_ := set .ingOutput "ingEnabled" false -}}
+  {{- end -}}
+{{- end -}}
+
+{{/*
+  Check if the different configurations are enabled. Returns the 'configString'
+  and 'configFile', both as booleans.
+  Note: Helm templates do not implement full-fledge functions. Below is an
+        implementation of 'returning' a result, abide in a very weird way
+  Reference: https://dastrobu.medium.com/are-helm-charts-turing-complete-46ea7a540ca2
+             https://blog.flant.com/advanced-helm-templating/
+*/}}
+{{- define "configEnabledCheck" -}}
+  {{- if .config -}}
+    {{- if and .config.files .config.strings -}}
+      {{- $_ := set .configOutput "configFile" true }}
+      {{- $_ := set .configOutput "configString" true }}
+    {{- else if .config.files -}}
+      {{- $_ := set .configOutput "configFile" true }}
+      {{- $_ := set .configOutput "configString" false }}
+    {{- else if .config.strings -}}
+      {{- $_ := set .configOutput "configFile" false }}
+      {{- $_ := set .configOutput "configString" true }}
+    {{- else -}}
+      {{- $_ := set .configOutput "configFile" false }}
+      {{- $_ := set .configOutput "configString" false }}
+    {{- end -}}
+  {{- else -}}
+    {{- $_ := set .configOutput "configFile" false }}
+    {{- $_ := set .configOutput "configString" false }}
+  {{- end -}}
+{{- end -}}
+
+{{/*
+  Check if the different secrets are enabled. Returns the 'secretString' and
+  'secretFile', both as booleans. Also checks if secret data declared in the
+  plain text file is defined in the encrypted file.
+  Note: Helm templates do not implement full-fledge functions. Below is an
+        implementation of 'returning' a result, abide in a very weird way
+  Reference: https://dastrobu.medium.com/are-helm-charts-turing-complete-46ea7a540ca2
+             https://blog.flant.com/advanced-helm-templating/
+*/}}
+{{- define "secretEnabledCheck" -}}
+  {{- if .secret.secrets -}}
+    {{- if and .secret.secrets.files .secret.secrets.strings -}}
+      {{- $_ := set .secretOutput "secretFile" true -}}
+      {{- $_ := set .secretOutput "secretString" true -}}
+      {{- if or ( not $.secret.secretFiles ) ( not .secret.secretStrings ) -}}
+        {{- fail ( printf "\n\nError --> Secret data not found. Did you forget to add secrets as an input file?\n" ) -}}
+      {{- end -}}
+      {{- range $secretFileName := .secret.secrets.files -}}
+        {{- if eq ( get $.secret.secretFiles ( printf $secretFileName ) ) "" -}}
+          {{- fail ( printf "\n\nError --> %s is not declared in helm-secrets" $secretFileName ) -}}
+        {{- end -}}
+      {{- end -}}
+      {{- range $secretStringName := .secret.secrets.strings -}}
+        {{- if eq ( get $.secret.secretStrings ( printf $secretStringName ) ) "" -}}
+          {{- fail ( printf "\n\nError --> %s is not declared in helm-secrets" $secretStringName ) -}}
+        {{- end -}}
+      {{- end -}}
+    {{- else if .secret.secrets.files -}}
+      {{- $_ := set .secretOutput "secretFile" true -}}
+      {{- $_ := set .secretOutput "secretString" false -}}
+      {{- if not .secret.secretFiles -}}
+        {{- fail ( printf "\n\nError --> Secret file data not found. Did you forget to add secrets as an input file?\n" ) -}}
+      {{- end -}}
+      {{- range $secretFileName := .secret.secrets.files -}}
+        {{- if eq ( get $.secret.secretFiles ( printf $secretFileName ) ) "" -}}
+          {{- fail ( printf "\n\nError --> %s is not declared in helm-secrets" $secretFileName ) -}}
+        {{- end -}}
+      {{- end -}}
+    {{- else if .secret.secrets.strings -}}
+      {{- $_ := set .secretOutput "secretFile" false -}}
+      {{- $_ := set .secretOutput "secretString" true -}}
+      {{- if not .secret.secretStrings -}}
+        {{- fail ( printf "\n\nError --> Secret string data not found. Did you forget to add secrets as an input file?\n" ) -}}
+      {{- end -}}
+      {{- range $secretStringName := .secret.secrets.strings -}}
+        {{- if eq ( get $.secret.secretStrings ( printf $secretStringName ) ) "" -}}
+          {{- fail ( printf "\n\nError --> %s is not declared in helm-secrets" $secretStringName ) -}}
+        {{- end -}}
+      {{- end -}}
+    {{- else -}}
+      {{- $_ := set .secretOutput "secretFile" false -}}
+      {{- $_ := set .secretOutput "secretString" false -}}
+    {{- end -}}
+  {{- else -}}
+    {{- $_ := set .secretOutput "secretFile" false -}}
+    {{- $_ := set .secretOutput "secretString" false -}}
   {{- end -}}
 {{- end -}}

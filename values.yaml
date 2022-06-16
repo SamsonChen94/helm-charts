@@ -129,6 +129,13 @@
 #     key1: value1
 #     key2: value2
 
+## Inject secret files or environment variables into workload via k8s secrets
+# secrets:
+#   files:
+#     - secret.conf
+#   strings:
+#     - key5
+
 ## Additional container configurations. Use this section if multiple containers
 ## are required to run in the same Kubernetes pod
 # additionalContainers:
@@ -146,3 +153,8 @@
 #       strings:
 #         key3: value3
 #         key4: value4
+#     secrets:
+#       files:
+#         - config3.sh
+#       strings:
+#         - key6

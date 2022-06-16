@@ -8,10 +8,12 @@
   Ref: https://kubernetes.io/docs/tasks/run-application/run-stateless-application-deployment
 */}}
 {{- if eq .Values.workload "deployment" }}
-{{- $configArgs := dict "config" .Values.configurations "configOutput" (dict) }}
-{{- include "configEnabledCheck" $configArgs }}
 {{- $hpaArgs := dict "hpa" .Values.hpa "hpaOutput" (dict) }}
 {{- include "hpaEnabled" $hpaArgs }}
+{{- $configArgs := dict "config" .Values.configurations "configOutput" (dict) }}
+{{- include "configEnabledCheck" $configArgs }}
+{{- $secretArgs := dict "secret" .Values "secretOutput" (dict) }}
+{{- include "secretEnabledCheck" $secretArgs }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -66,27 +68,43 @@ spec:
         were made to this file directly. Effectively triggering a redeployment
         of this workload when configurations or secrets have been altered.
       */}}
-      {{- if or $configArgs.configOutput.configFile $configArgs.configOutput.configString }}
+      {{- if or ( or $configArgs.configOutput.configFile $configArgs.configOutput.configString ) ( or $secretArgs.secretOutput.secretFile $secretArgs.secretOutput.secretString ) }}
       annotations:
+        {{- if or $configArgs.configOutput.configFile $configArgs.configOutput.configString }}
         checksum/config: {{ include ( print .Template.BasePath "/configMap.yaml" ) . | sha256sum }}
+        {{- end }}
+        {{- if or $secretArgs.secretOutput.secretFile $secretArgs.secretOutput.secretString }}
+        checksum/secret: {{ include ( print .Template.BasePath "/secret.yaml" ) . | sha256sum }}
+        {{- end }}
       {{- end }}
       labels:
         {{- include "labels" . | nindent 8 }}
     spec:
       containers:
-        - {{ if $configArgs.configOutput.configString -}}
+        - {{ if or $configArgs.configOutput.configString $secretArgs.secretOutput.secretString -}}
           {{/*
             Implement all environment variables as config maps. That is,
             excluding secrets, all environment variables are defined solely in
             the 'config' directory.
           */ -}}
           env:
+            {{- if $configArgs.configOutput.configString }}
             {{- range $key, $value := $configArgs.config.strings }}
             - name: {{ $key }}
               valueFrom:
                 configMapKeyRef:
                   name: {{ template "fullname" $ }}-cm
                   key: {{ $key }}
+            {{- end }}
+            {{- end }}
+            {{- if $secretArgs.secretOutput.secretString }}
+            {{- range $value := $secretArgs.secret.secrets.strings }}
+            - name: {{ $value }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "fullname" $ }}-secret
+                  key: {{ $value }}
+            {{- end }}
             {{- end }}
           {{ end -}}
           {{- include "imageNameTag" .Values }}
@@ -98,10 +116,16 @@ spec:
             environment variables from config maps and secrets do not require
             a volume mount to be defined.
           */}}
-          {{- if $configArgs.configOutput.configFile }}
+          {{- if or $configArgs.configOutput.configFile $secretArgs.secretOutput.secretFile }}
           volumeMounts:
+            {{- if $configArgs.configOutput.configFile }}
             - mountPath: /mount/config
               name: config
+            {{- end }}
+            {{- if $secretArgs.secretOutput.secretFile }}
+            - mountPath: /mount/secret
+              name: secret
+            {{- end }}
           {{- end }}
         {{- /*
           In some use cases, multiple additional containers are necessary for
@@ -110,18 +134,33 @@ spec:
           container. For more information on different patterns of
           multi-container deployments, read up 'Container Design Patterns'.
         */}}
+        {{- $additionalContainerConfigFileEnabled := false }}
+        {{- $additionalContainerSecretFileEnabled := false }}
         {{- if .Values.additionalContainers }}
         {{- range $additionalContainer := .Values.additionalContainers }}
         {{- $additionalConfigArgs := dict "config" $additionalContainer.configurations "configOutput" (dict) }}
         {{- include "configEnabledCheck" $additionalConfigArgs }}
-        - {{ if $additionalConfigArgs.configOutput.configString -}}
+        {{- $additionalSecretArgs := dict "secret" $additionalContainer "secretOutput" (dict) }}
+        {{- include "secretEnabledCheck" $additionalSecretArgs }}
+        - {{ if or $additionalConfigArgs.configOutput.configString $additionalSecretArgs.secretOutput.secretString -}}
           env:
+            {{- if $additionalConfigArgs.configOutput.configString }}
             {{- range $key, $value := $additionalConfigArgs.config.strings }}
             - name: {{ $key }}
               valueFrom:
                 configMapKeyRef:
                   name: {{ template "fullname" $ }}-cm
                   key: {{ $key }}
+            {{- end }}
+            {{- end }}
+            {{- if $additionalSecretArgs.secretOutput.secretString }}
+            {{- range $value := $additionalSecretArgs.secret.secrets.strings }}
+            - name: {{ $value }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "fullname" $ }}-secret
+                  key: {{ $value }}
+            {{- end }}
             {{- end }}
           {{ end -}}
           {{- include "imageNameTag" $additionalContainer }}
@@ -133,10 +172,18 @@ spec:
             environment variables from config maps and secrets do not require
             a volume mount to be defined.
           */}}
-          {{- if $additionalConfigArgs.configOutput.configFile }}
+          {{- if or $additionalConfigArgs.configOutput.configFile $additionalSecretArgs.secretOutput.secretFile }}
           volumeMounts:
+            {{- if $additionalConfigArgs.configOutput.configFile }}
+            {{- $additionalContainerConfigFileEnabled = true }}
             - mountPath: /mount/config
               name: config
+            {{- end }}
+            {{- if $additionalSecretArgs.secretOutput.secretFile }}
+            {{- $additionalContainerSecretFileEnabled = true }}
+            - mountPath: /mount/secret
+              name: secret
+            {{- end }}
           {{- end }}
         {{- end }}
         {{- end }}
@@ -148,10 +195,18 @@ spec:
         variables from config maps and secrets do not required a volume to be
         defined.
       */}}
-      {{- if $configArgs.configOutput.configFile }}
+      {{- if or ( or $configArgs.configOutput.configFile $additionalContainerConfigFileEnabled ) ( or $secretArgs.secretOutput.secretFile $additionalContainerSecretFileEnabled ) }}
       volumes:
+        {{- if or $configArgs.configOutput.configFile $additionalContainerConfigFileEnabled }}
         - configMap:
             name: {{ template "fullname" . }}-cm
           name: config
+        {{- end }}
+        {{- if or $secretArgs.secretOutput.secretFile $additionalContainerSecretFileEnabled }}
+        - name: secret
+          secret:
+            defaultMode: 420
+            secretName: {{ template "fullname" . }}-secret
+        {{- end }}
       {{- end }}
 {{- end }}
