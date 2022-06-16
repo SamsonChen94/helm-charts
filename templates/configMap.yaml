@@ -7,27 +7,28 @@
   mounted objects via the 'mountVolume' and 'volume' definitions.
   Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap
 */}}
+{{- $configDataFiles := ( list ) }}
+{{- $configDataStrings := ( dict ) }}
+{{- if .Values.additionalContainers }}
+{{- range $additionalContainer := .Values.additionalContainers }}
+{{- $additionalConfigArgs := dict "config" $additionalContainer.configurations "configOutput" (dict) }}
+{{- include "configEnabledCheck" $additionalConfigArgs }}
+{{- if $additionalConfigArgs.configOutput.configFile }}
+{{- $configDataFiles = concat $configDataFiles $additionalConfigArgs.config.files }}
+{{- end }}
+{{- if $additionalConfigArgs.configOutput.configString }}
+{{- $configDataStrings = mustMerge $configDataStrings $additionalConfigArgs.config.strings }}
+{{- end }}
+{{- end }}
+{{- end }}
 {{- $configArgs := dict "config" .Values.configurations "configOutput" (dict) }}
 {{- include "configEnabledCheck" $configArgs }}
-{{- if or $configArgs.configOutput.configFile $configArgs.configOutput.configString }}
-{{- $configDataFiles := $configArgs.config.files }}
-{{- $configDataStrings := $configArgs.config.strings }}
-{{- /*
-  Checking for additional configuration from additional containers.
-  Loops each additional container and find the additional configurations, if any
-  Appends all additional configurations into exiting $configArgs.config dictionary
-*/}}
-{{- if .Values.additionalContainers }}
-{{- range $extraContainer := .Values.additionalContainers }}
-{{- if $extraContainer.configurations }}
-{{- if $extraContainer.configurations.files }}
-{{- $configDataFiles = concat $configArgs.config.files $extraContainer.configurations.files }}
+{{- if or ( or $configArgs.configOutput.configFile $configArgs.configOutput.configString ) ( or ( not ( empty $configDataFiles ) ) ( not ( empty $configDataStrings ) ) ) }}
+{{- if $configArgs.configOutput.configFile }}
+{{- $configDataFiles = concat $configArgs.config.files $configDataFiles }}
 {{- end }}
-{{- if $extraContainer.configurations.strings }}
-{{- $configDataStrings = mustMerge $configArgs.config.strings $extraContainer.configurations.strings }}
-{{- end }}
-{{- end }}
-{{- end }}
+{{- if $configArgs.configOutput.configString}}
+{{- $configDataStrings = mustMerge $configArgs.config.strings $configDataStrings }}
 {{- end }}
 apiVersion: v1
 data:
@@ -39,7 +40,7 @@ data:
     4. Skip files that are not declared in "configurations.files"
     5. Error out if element in "configurations.files" does not exist in ../config
   */}}
-  {{- if $configArgs.configOutput.configFile }}
+  {{- if $configDataFiles }}
   {{- $directory := .Files.Glob "config/**" }}
   {{- range $file := $configDataFiles }}
   {{- $fileExists := false }}
@@ -59,7 +60,7 @@ data:
   {{- /*
     Config maps as variables
   */}}
-  {{- if $configArgs.configOutput.configString }}
+  {{- if $configDataStrings }}
   {{- range $key, $value := $configDataStrings }}
   {{ $key }}: {{ $value }}
   {{- end }}

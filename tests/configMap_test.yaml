@@ -32,13 +32,6 @@ tests:
           value: testing-ns
       - isNotNull:
           path: metadata.labels
-  - it: should get configuration data from configurations
-    set:
-      configurations.strings.key1: value1
-    asserts:
-      - equal:
-          path: data.key1
-          value: value1
   - it: should get configuration file data from config directory
     set:
       configurations.files[0]: config.conf
@@ -51,24 +44,54 @@ tests:
     asserts:
       - isNull:
           path: data.confing2\.conf
+  - it: should get configuration string data from configurations
+    set:
+      configurations.strings.key1: value1
+    asserts:
+      - equal:
+          path: data.key1
+          value: value1
+  - it: should skip configuration string not defined in values.yaml
+    set:
+      configurations.strings.key1: value1
+    asserts:
+      - isNull:
+          path: data.key2
+  - it: should only get configuration files from additionalContainers in values.yaml
+    set:
+      additionalContainers:
+        - configurations:
+            files:
+              - config3.sh
+    asserts:
+      - isNotNull:
+          path: data.config3\.sh
+  - it: should only get configuration strings from additionalContainers in values.yaml
+    set:
+      additionalContainers:
+        - configurations:
+            strings:
+              key3: value3
+    asserts:
+      - isNotNull:
+          path: data.key3
+      - equal:
+          path: data.key3
+          value: value3
   - it: should get configurations from multiple sources
     values:
       - ./values/cm-only.yaml
     asserts:
       - isNotNull:
           path: data.config\.conf
+      - isNotNull:
+          path: data.config3\.sh
       - equal:
           path: data.key1
           value: value1
       - equal:
           path: data.key2
           value: value2
-  - it: should get configurations from additional containers
-    values:
-      - ./values/cm-only.yaml
-    asserts:
-      - isNotNull:
-          path: data.config3\.sh
       - equal:
           path: data.key3
           value: value3
