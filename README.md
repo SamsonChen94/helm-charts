@@ -5,7 +5,8 @@ Helm is a tool to deploy applications on Kubernetes. Helm charts are basically t
 ## TL;DR
 
 ```
-$ helm upgrade --install --namespace <NAMESPACE> <APPLICATION_NAME> .
+$ helm repo add helm-charts https://samsonchen94.github.io/helm-charts
+$ helm upgrade --install --namespace <NAMESPACE> <APPLICATION_NAME> helm-charts/helm-charts
 ```
 
 ## Prerequisites
@@ -53,27 +54,35 @@ $ helm delete --namespace <NAMESPACE> <APPLICATION_NAME>
 
 ## Operations
 
-1. Run lint test
+1. Add helm chart repository into helm
+```
+$ helm repo add helm-charts https://samsonchen94.github.io/helm-charts
+```
+2. Update helm chart repository in helm
+```
+$ helm repo update helm-charts
+```
+3. Run lint test
 ```
 $ helm lint -f values.yaml .
 ```
-2. Run unit test
+4. Run unit test
 ```
 $ helm unittest .
 ```
-3. Modify helm secrets
+5. Modify helm secrets
 ```
 $ helm secrets edit .helm-secrets/<DIR_WITH_SOPS_YAML>/<ENCRYPTED_FILE>
 ```
-4. View helm secrets
+6. View helm secrets
 ```
 $ helm secrets view .helm-secrets/<DIR_WITH_SOPS_YAML>/<ENCRYPTED_FILE>
 ```
-5. Encrypt new secret file
+7. Encrypt new secret file
 ```
 $ helm secrets enc ./helm-secrets/<DIR_WITH_SOPS_YAML>/<UNENCRYPTED_FILE>
 ```
-6. Turn encrypted secret file to plain text
+8. Turn encrypted secret file to plain text
 ```
 $ helm secrets dec ./helm-secrets/<DIR_WITH_SOPS_YAML>/<UNENCRYPTED_FILE>
 ```
