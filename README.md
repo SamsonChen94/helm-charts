@@ -62,27 +62,36 @@ $ helm repo add helm-charts https://samsonchen94.github.io/helm-charts
 ```
 $ helm repo update helm-charts
 ```
-3. Run lint test
+3. Package a new helm chart version
+```
+$ helm package .
+$ mv helmCharts-*.tgz docs
+$ helm repo index docs --url https://samsonchen94.github.io/helm-charts
+$ git add .
+$ git commit -m 'chor: new release version'
+$ git push origin main
+```
+4. Run lint test
 ```
 $ helm lint -f values.yaml .
 ```
-4. Run unit test
+5. Run unit test
 ```
 $ helm unittest .
 ```
-5. Modify helm secrets
+6. Modify helm secrets
 ```
 $ helm secrets edit .helm-secrets/<DIR_WITH_SOPS_YAML>/<ENCRYPTED_FILE>
 ```
-6. View helm secrets
+7. View helm secrets
 ```
 $ helm secrets view .helm-secrets/<DIR_WITH_SOPS_YAML>/<ENCRYPTED_FILE>
 ```
-7. Encrypt new secret file
+8. Encrypt new secret file
 ```
 $ helm secrets enc ./helm-secrets/<DIR_WITH_SOPS_YAML>/<UNENCRYPTED_FILE>
 ```
-8. Turn encrypted secret file to plain text
+9. Turn encrypted secret file to plain text
 ```
 $ helm secrets dec ./helm-secrets/<DIR_WITH_SOPS_YAML>/<UNENCRYPTED_FILE>
 ```
