@@ -176,16 +176,45 @@ ports:
              https://blog.flant.com/advanced-helm-templating/
 */}}
 {{- define "configEnabledCheck" -}}
-  {{- if .config -}}
-    {{- if and .config.files .config.strings -}}
+  {{- if .config.configurations -}}
+    {{- if and .config.configurations.files .config.configurations.strings -}}
       {{- $_ := set .configOutput "configFile" true }}
       {{- $_ := set .configOutput "configString" true }}
-    {{- else if .config.files -}}
+      {{- if or ( not $.config.configFiles ) ( not .config.configStrings ) -}}
+        {{- fail ( printf "\n\nError --> Configuration data not found. Did you forget to add configs as an input file?\n" ) -}}
+      {{- end -}}
+      {{- range $configFileName := .config.configurations.files -}}
+        {{- if eq ( get $.config.configFiles ( printf $configFileName ) ) "" -}}
+          {{- fail ( printf "\n\nError --> %s is not declared in helm's configuration directory" $configFileName ) -}}
+        {{- end -}}
+      {{- end -}}
+      {{- range $configStringName := .config.configurations.strings -}}
+        {{- if eq ( get $.config.configStrings ( printf $configStringName ) ) "" -}}
+          {{- fail ( printf "\n\nError --> %s is not declared in helm's configuration directory" $configStringName ) -}}
+        {{- end -}}
+      {{- end -}}
+    {{- else if .config.configurations.files -}}
       {{- $_ := set .configOutput "configFile" true }}
       {{- $_ := set .configOutput "configString" false }}
-    {{- else if .config.strings -}}
+      {{- if not .config.configFiles -}}
+        {{- fail ( printf "\n\nError --> Configuration file data not found. Did you forget to add configs as an input file?\n" ) -}}
+      {{- end -}}
+      {{- range $configFileName := .config.configurations.files -}}
+        {{- if eq ( get $.config.configFiles ( printf $configFileName ) ) "" -}}
+          {{- fail ( printf "\n\nError --> %s is not declared in helm's configuration directory" $configFileName ) -}}
+        {{- end -}}
+      {{- end -}}
+    {{- else if .config.configurations.strings -}}
       {{- $_ := set .configOutput "configFile" false }}
       {{- $_ := set .configOutput "configString" true }}
+      {{- if not .config.configStrings -}}
+        {{- fail ( printf "\n\nError --> Configuration string data not found. Did you forget to add configs as an input file?\n" ) -}}
+      {{- end -}}
+      {{- range $configStringName := .config.configurations.strings -}}
+        {{- if eq ( get $.config.configStrings ( printf $configStringName ) ) "" -}}
+          {{- fail ( printf "\n\nError --> %s is not declared in helm's configuration directory" $configStringName ) -}}
+        {{- end -}}
+      {{- end -}}
     {{- else -}}
       {{- $_ := set .configOutput "configFile" false }}
       {{- $_ := set .configOutput "configString" false }}

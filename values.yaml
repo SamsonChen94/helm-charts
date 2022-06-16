@@ -126,8 +126,8 @@
 #   files:
 #     - config.conf
 #   strings:
-#     key1: value1
-#     key2: value2
+#     - key1
+#     - key2
 
 ## Inject secret files or environment variables into workload via k8s secrets
 # secrets:
@@ -151,10 +151,10 @@
 #       files:
 #         - config3.sh
 #       strings:
-#         key3: value3
-#         key4: value4
+#         - key3
+#         - key4
 #     secrets:
 #       files:
-#         - config3.sh
+#         - secret3.sh
 #       strings:
 #         - key6

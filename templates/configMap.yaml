@@ -8,61 +8,41 @@
   Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap
 */}}
 {{- $configDataFiles := ( list ) }}
-{{- $configDataStrings := ( dict ) }}
+{{- $configDataStrings := ( list ) }}
 {{- if .Values.additionalContainers }}
 {{- range $additionalContainer := .Values.additionalContainers }}
-{{- $additionalConfigArgs := dict "config" $additionalContainer.configurations "configOutput" (dict) }}
+{{- $_ := set $additionalContainer "configFiles" $.Values.configFiles }}
+{{- $_ := set $additionalContainer "configStrings" $.Values.configStrings }}
+{{- $additionalConfigArgs := dict "config" $additionalContainer "configOutput" (dict) }}
 {{- include "configEnabledCheck" $additionalConfigArgs }}
 {{- if $additionalConfigArgs.configOutput.configFile }}
-{{- $configDataFiles = concat $configDataFiles $additionalConfigArgs.config.files }}
+{{- $configDataFiles = concat $configDataFiles $additionalConfigArgs.config.configurations.files }}
 {{- end }}
 {{- if $additionalConfigArgs.configOutput.configString }}
-{{- $configDataStrings = mustMerge $configDataStrings $additionalConfigArgs.config.strings }}
+{{- $configDataStrings = concat $configDataStrings $additionalConfigArgs.config.configurations.strings }}
 {{- end }}
 {{- end }}
 {{- end }}
-{{- $configArgs := dict "config" .Values.configurations "configOutput" (dict) }}
+{{- $configArgs := dict "config" .Values "configOutput" (dict) }}
 {{- include "configEnabledCheck" $configArgs }}
 {{- if or ( or $configArgs.configOutput.configFile $configArgs.configOutput.configString ) ( or ( not ( empty $configDataFiles ) ) ( not ( empty $configDataStrings ) ) ) }}
 {{- if $configArgs.configOutput.configFile }}
-{{- $configDataFiles = concat $configArgs.config.files $configDataFiles }}
+{{- $configDataFiles = concat $configArgs.config.configurations.files $configDataFiles }}
 {{- end }}
-{{- if $configArgs.configOutput.configString}}
-{{- $configDataStrings = mustMerge $configArgs.config.strings $configDataStrings }}
+{{- if $configArgs.configOutput.configString }}
+{{- $configDataStrings = concat $configArgs.config.configurations.strings $configDataStrings }}
 {{- end }}
 apiVersion: v1
 data:
-  {{- /*
-    Config maps as entire files
-    1. Retrieves glob data from ../config directory
-    2. Iterate over everything in "configurations.files"
-    3. Iterate over all files in ../config directory
-    4. Skip files that are not declared in "configurations.files"
-    5. Error out if element in "configurations.files" does not exist in ../config
-  */}}
   {{- if $configDataFiles }}
-  {{- $directory := .Files.Glob "config/**" }}
-  {{- range $file := $configDataFiles }}
-  {{- $fileExists := false }}
-  {{- range $path, $_ := $directory }}
-  {{- $filename := split "/" $path }}
-  {{- if eq $filename._1 $file }}
-  {{- $fileExists = true }}
-  {{ $filename._1 }}: |
-    {{- $.Files.Get $path | trim | nindent 4 }}
+  {{- range $configFileName := $configDataFiles }}
+  {{ $configFileName }}: |
+    {{- get $configArgs.config.configFiles ( printf $configFileName ) | nindent 4 }}
   {{- end }}
   {{- end }}
-  {{- if not $fileExists }}
-  {{- fail ( printf "\n\nError --> %s does not exist in configs directory\n" $file ) }}
-  {{- end }}
-  {{- end }}
-  {{- end }}
-  {{- /*
-    Config maps as variables
-  */}}
   {{- if $configDataStrings }}
-  {{- range $key, $value := $configDataStrings }}
-  {{ $key }}: {{ $value }}
+  {{- range $configStringName := $configDataStrings }}
+  {{ $configStringName }}: {{ get $configArgs.config.configStrings ( printf $configStringName ) }}
   {{- end }}
   {{- end }}
 kind: ConfigMap

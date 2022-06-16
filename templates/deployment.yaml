@@ -10,7 +10,7 @@
 {{- if eq .Values.workload "deployment" }}
 {{- $hpaArgs := dict "hpa" .Values.hpa "hpaOutput" (dict) }}
 {{- include "hpaEnabled" $hpaArgs }}
-{{- $configArgs := dict "config" .Values.configurations "configOutput" (dict) }}
+{{- $configArgs := dict "config" .Values "configOutput" (dict) }}
 {{- include "configEnabledCheck" $configArgs }}
 {{- $secretArgs := dict "secret" .Values "secretOutput" (dict) }}
 {{- include "secretEnabledCheck" $secretArgs }}
@@ -89,12 +89,12 @@ spec:
           */ -}}
           env:
             {{- if $configArgs.configOutput.configString }}
-            {{- range $key, $value := $configArgs.config.strings }}
-            - name: {{ $key }}
+            {{- range $value := $configArgs.config.configurations.strings }}
+            - name: {{ $value }}
               valueFrom:
                 configMapKeyRef:
                   name: {{ template "fullname" $ }}-cm
-                  key: {{ $key }}
+                  key: {{ $value }}
             {{- end }}
             {{- end }}
             {{- if $secretArgs.secretOutput.secretString }}
@@ -138,19 +138,21 @@ spec:
         {{- $additionalContainerSecretFileEnabled := false }}
         {{- if .Values.additionalContainers }}
         {{- range $additionalContainer := .Values.additionalContainers }}
-        {{- $additionalConfigArgs := dict "config" $additionalContainer.configurations "configOutput" (dict) }}
+        {{- $_ := set $additionalContainer "configFiles" $.Values.configFiles }}
+        {{- $_ := set $additionalContainer "configStrings" $.Values.configStrings }}
+        {{- $additionalConfigArgs := dict "config" $additionalContainer "configOutput" (dict) }}
         {{- include "configEnabledCheck" $additionalConfigArgs }}
         {{- $additionalSecretArgs := dict "secret" $additionalContainer "secretOutput" (dict) }}
         {{- include "secretEnabledCheck" $additionalSecretArgs }}
         - {{ if or $additionalConfigArgs.configOutput.configString $additionalSecretArgs.secretOutput.secretString -}}
           env:
             {{- if $additionalConfigArgs.configOutput.configString }}
-            {{- range $key, $value := $additionalConfigArgs.config.strings }}
-            - name: {{ $key }}
+            {{- range $value := $additionalConfigArgs.config.configurations.strings }}
+            - name: {{ $value }}
               valueFrom:
                 configMapKeyRef:
                   name: {{ template "fullname" $ }}-cm
-                  key: {{ $key }}
+                  key: {{ $value }}
             {{- end }}
             {{- end }}
             {{- if $additionalSecretArgs.secretOutput.secretString }}
