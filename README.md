@@ -6,7 +6,7 @@ Helm is a tool to deploy applications on Kubernetes. Helm charts are basically t
 
 ```
 $ helm repo add helm-charts https://samsonchen94.github.io/helm-charts
-$ helm upgrade --install --namespace <NAMESPACE> <APPLICATION_NAME> helm-charts/helm-charts
+$ helm upgrade --install --namespace <NAMESPACE> <APPLICATION_NAME> helm-charts/helmCharts
 ```
 
 ## Prerequisites
@@ -26,7 +26,7 @@ $ helm secrets upgrade \
   -f values.yaml \
   -f ./helm-secrets/example-environment/<SECRET_FILE>.yaml \
   --namespace <NAMESPACE> \
-  <APPLICATION_NAME> .
+  <APPLICATION_NAME> helm-charts/helmCharts
 ```
 
 ## Uninstalling the chart
