@@ -2,7 +2,37 @@ apiVersion: v1
 entries:
   helmCharts:
   - apiVersion: v2
-    created: "2022-06-16T16:10:58.144691+08:00"
+    created: "2022-06-16T22:42:13.828002+08:00"
+    description: Universal Helm chart template to be used for all future Helm deployments
+    digest: 37a89c4c7b169092c9cb43bc471c8f797615cd69a81d6b17173222fb9e716e00
+    home: https://github.com/SamsonChen94/helm-charts
+    icon: https://helm.sh/img/helm.svg
+    kubeVersion: '>= 1.19.0-0'
+    maintainers:
+    - email: samsonchen1260@gmail.com
+      name: Samson Chen
+    name: helmCharts
+    type: application
+    urls:
+    - https://samsonchen94.github.io/helm-charts/helmCharts-1.0.2.tgz
+    version: 1.0.2
+  - apiVersion: v2
+    created: "2022-06-16T22:42:13.827526+08:00"
+    description: Universal Helm chart template to be used for all future Helm deployments
+    digest: befffe23569e9768cdac44ae286688c600bb3a014565854205c93e2532cba6bc
+    home: https://github.com/SamsonChen94/helm-charts
+    icon: https://helm.sh/img/helm.svg
+    kubeVersion: '>= 1.19.0-0'
+    maintainers:
+    - email: samsonchen1260@gmail.com
+      name: Samson Chen
+    name: helmCharts
+    type: application
+    urls:
+    - https://samsonchen94.github.io/helm-charts/helmCharts-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    created: "2022-06-16T22:42:13.826518+08:00"
     description: Universal Helm chart template to be used for all future Helm deployments
     digest: 3fe118b2c6cf2d9cd253db2309d07d3770b24a207e173abaa6f31a91c35db2b7
     home: https://github.com/SamsonChen94/helm-charts
@@ -16,4 +46,4 @@ entries:
     urls:
     - https://samsonchen94.github.io/helm-charts/helmCharts-1.0.0.tgz
     version: 1.0.0
-generated: "2022-06-16T16:10:58.143541+08:00"
+generated: "2022-06-16T22:42:13.824999+08:00"
