@@ -1,3 +1,8 @@
+# ## For more secret management service support, check https://github.com/mozilla/sops
 # creation_rules:
-#   ## Encrypt using GCP KMS on inline-dev project
+#   ## Encrypt using GCP KMS
 #   - gcp_kms: projects/<PROJECT_NAME>/locations/<REGION>/keyRings/<KEY_RING_NAME>/cryptoKeys/<CRYPTOGRAPHIC_KEY>
+#   ## Encrypt using AWS KMS
+#   - kms: 'arn:aws:kms:<REGION>:<RESOURCE_ID>:key/<KEY_ID>+arn:aws:iam::<IAM_ID>:role/<ROLE_NAME>'
+#   ## Encrypt using PGP
+#   - pgp: <PGP_KEY>
