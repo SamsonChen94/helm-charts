@@ -1,0 +1,3 @@
+# creation_rules:
+#   ## Encrypt using GCP KMS on inline-dev project
+#   - gcp_kms: projects/<PROJECT_NAME>/locations/<REGION>/keyRings/<KEY_RING_NAME>/cryptoKeys/<CRYPTOGRAPHIC_KEY>

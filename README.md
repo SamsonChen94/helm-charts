@@ -20,13 +20,18 @@ $ helm upgrade --install --namespace <NAMESPACE> <APPLICATION_NAME> .
 ## Installing or Upgrading Chart with Secrets
 
 ```
-$ helm secrets upgrade --install -f values.yaml -f secrets/<SECRET_FILE>.yaml --namespace <NAMESPACE> <APPLICATION_NAME> .
+$ helm secrets upgrade \
+  --install \
+  -f values.yaml \
+  -f ./helm-secrets/example-environment/<SECRET_FILE>.yaml \
+  --namespace <NAMESPACE> \
+  <APPLICATION_NAME> .
 ```
 
 ## Uninstalling the chart
 
 ```
-$ helm delete <APPLICATION_NAME>
+$ helm delete --namespace <NAMESPACE> <APPLICATION_NAME>
 ```
 
 ## Configuration
@@ -48,29 +53,39 @@ $ helm delete <APPLICATION_NAME>
 
 ## Operations
 
-1. Running lint test
+1. Run lint test
 ```
-$ helm lint
+$ helm lint -f values.yaml .
 ```
-2. Running unit test
+2. Run unit test
 ```
 $ helm unittest .
 ```
+3. Modify helm secrets
+```
+$ helm secrets edit .helm-secrets/<DIR_WITH_SOPS_YAML>/<ENCRYPTED_FILE>
+```
+4. View helm secrets
+```
+$ helm secrets view .helm-secrets/<DIR_WITH_SOPS_YAML>/<ENCRYPTED_FILE>
+```
+5. Encrypt new secret file
+```
+$ helm secrets enc ./helm-secrets/<DIR_WITH_SOPS_YAML>/<UNENCRYPTED_FILE>
+```
+6. Turn encrypted secret file to plain text
+```
+$ helm secrets dec ./helm-secrets/<DIR_WITH_SOPS_YAML>/<UNENCRYPTED_FILE>
+```
 
 ## TODO List
-- Configure helm unittest
-- Add `kind: Deployment`
 - Add `kind: BackendConfig`
 - Add `kind: FrontendConfig`
-- Add `kind: Service`
-- Add `kind: Ingress`
 - Add `kind: ManagedCertificate`
-- Add `kind: HorizontalPodAutoscaler`
 - Add `kind: PersistentVolume`
 - Add `kind: PersistentVolumeClaim`
 - Add `kind: StorageClass`
 - Configure helm-secrets
-- Add `kind: Secret`
 - Add `kind: Role`
 - Add `kind: RoleBinding`
 - Add `kind: ClusterRole`
