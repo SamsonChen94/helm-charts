@@ -15,6 +15,7 @@
 .svn/
 README.md
 LICENSE
+docs/
 
 ## Common backup files
 *.swp
