@@ -4,6 +4,14 @@ imageName: nginx
 imageTag: latest
 imagePullPolicy: IfNotPresent
 
+resources:
+  limits:
+    cpu: 100m
+    memory: 100Mi
+  requests:
+    cpu: 100m
+    memory: 100Mi
+
 scalingConfig:
   maxSurge: 3
   maxUnavailable: 0
@@ -14,3 +22,10 @@ additionalContainers:
     imageName: nginx
     imageTag: v1.0.0
     imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 200m
+        memory: 200Mi
+      requests:
+        cpu: 200m
+        memory: 200Mi

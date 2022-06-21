@@ -108,6 +108,53 @@ tests:
       - equal:
           path: spec.strategy.type
           value: Recreate
+  - it: should return correct resource configuration for main container only
+    set:
+      workload: deployment
+      imageName: nginx
+      imageTag: latest
+      resources.requests.cpu: 100m
+      resources.limits.cpu: 100m
+      resources.requests.memory: 100Mi
+      resources.limits.memory: 100Mi
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.containers[0].resources
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+  - it: should return correct resource configuration for additional container
+    values:
+      - ./values/deploy-only.yaml
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.containers[0].resources
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+      - isNotNull:
+          path: spec.template.spec.containers[1].resources
+      - equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            limits:
+              cpu: 200m
+              memory: 200Mi
+            requests:
+              cpu: 200m
+              memory: 200Mi
   - it: should exclude undefined yaml data
     values:
       - ./values/deploy-only.yaml
@@ -119,15 +166,11 @@ tests:
       - isNull:
           path: spec.template.spec.containers[0].env
       - isNull:
-          path: spec.template.spec.containers[0].resources
-      - isNull:
           path: spec.template.spec.containers[0].volumeMounts
       - isNull:
           path: spec.template.spec.containers[1].args
       - isNull:
           path: spec.template.spec.containers[1].env
-      - isNull:
-          path: spec.template.spec.containers[1].resources
       - isNull:
           path: spec.template.spec.containers[1].volumeMounts
       - isNull:
