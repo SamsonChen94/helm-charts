@@ -13,7 +13,7 @@ $ helm secrets upgrade \
   --set <PATH_TO_VALUES_FILE> \
   --set <PATH_TO_CONFIG_FILE> \
   --set <PATH_TO_SECRET_FILE> \
-  <APPLICATION_NAME> helm-charts/helmCharts
+  <APPLICATION_NAME> helm-charts/helm-charts
 ```
 
 ## Prerequisites
@@ -35,7 +35,7 @@ $ helm secrets upgrade \
   --set <PATH_TO_VALUES_FILE> \
   --set <PATH_TO_CONFIG_FILE> \
   --set <PATH_TO_SECRET_FILE> \
-  <APPLICATION_NAME> helm-charts/helmCharts
+  <APPLICATION_NAME> helm-charts/helm-charts
 ```
 
 ## Uninstalling the chart
@@ -222,7 +222,7 @@ $ helm repo update helm-charts
 3. Package a new helm chart version
 ```
 $ helm package .
-$ mv helmCharts-*.tgz docs
+$ mv helm-charts-*.tgz docs
 $ helm repo index docs --url https://samsonchen94.github.io/helm-charts
 $ git add .
 $ git commit -m 'chor: new release version'
