@@ -55,6 +55,7 @@ $ helm delete --namespace <NAMESPACE> <APPLICATION_NAME>
 | `imagePullPolicy` | Optional. The behavior of Kubelet for downloading Docker images. [Reference](https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy) | string |
 | [`services`](#services-configurations) | Optional. Kubernetes service configuration responsible for Kubernetes internal network traffic. | dict |
 | [`ingress`](#ingress-configurations) | Optional. Creates a provider dependent Kubernetes [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). | dict |
+| `resources` | Optional. The [resource allocation](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) for the workload. | dict |
 | [`scalingConfig`](#scalingconfig-configurations) | Optional. Scaling configuration for **deployment** workloads only. | dict |
 | [`hpa`](#hpa-configurations) | Optional. Creates a [horizontal pod autoscaler](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) in charge of dynamically scaling the workload according to a designated metric. | dict |
 | [`configurations`](#configurations-configurations) | Optional. Creates a [configuration map](https://kubernetes.io/docs/concepts/configuration/configmap/) Kubernetes resource responsible for injecting variables and files into the workload via environment variables and configuration mapping respectively.
@@ -194,6 +195,7 @@ $ helm delete --namespace <NAMESPACE> <APPLICATION_NAME>
 | `imageTag` | Required. The docker image tag to deploy to Kubernetes. | string |
 | `imagePullPolicy` | Optional. The behavior of Kubelet for downloading Docker images. [Reference](https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy) | string |
 | [`services`](#services-configurations) | Optional. Kubernetes service configuration responsible for Kubernetes internal network traffic. <br>NOTE: In the case of repeated configurations in the main container (top level `services` parameter), the configuration will be merged into the same Kubernetes service resource. | dict |
+| `resources` | Optional. The [resource allocation](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) for the workload. | dict |
 | [`configurations`](#configurations-configurations) | Optional. Creates a [configuration map](https://kubernetes.io/docs/concepts/configuration/configmap/) Kubernetes resource responsible for injecting variables and files into the workload via environment variables and configuration mapping respectively.
 | [`secrets`](#secrets-configurations) | Optional. Creates a [secret](https://kubernetes.io/docs/concepts/configuration/secret/) Kubernetes resource responsible for injecting variables and files into the workload via encoded secrets. | dict |
 
