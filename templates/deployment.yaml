@@ -111,6 +111,10 @@ spec:
           imagePullPolicy: {{ .Values.imagePullPolicy | default "Always" }}
           name: {{ template "fullname" . }}
           {{- include "workloadPortConfig" .Values.services | indent 10 }}
+          {{- if .Values.resources }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
           {{- /*
             Configure volume mounts to the working container. Note that
             environment variables from config maps and secrets do not require
@@ -169,6 +173,10 @@ spec:
           imagePullPolicy: {{ $additionalContainer.imagePullPolicy | default "Always" }}
           name: {{ $additionalContainer.name }}
           {{- include "workloadPortConfig" $additionalContainer.services | indent 10 }}
+          {{- if $additionalContainer.resources }}
+          resources:
+            {{- toYaml $additionalContainer.resources | nindent 12 }}
+          {{- end }}
           {{- /*
             Configure volume mounts to the working container. Note that
             environment variables from config maps and secrets do not require

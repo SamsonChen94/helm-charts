@@ -100,6 +100,16 @@
 #             - domainPath: "/*"
 #               servicePort: 8082
 
+## Resource allocation.
+## Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers
+# resources:
+#   limits:
+#     cpu: 100m
+#     memory: 100Mi
+#   requests:
+#     cpu: 100m
+#     memory: 100Mi
+
 ## Scaling configuration. Should only apply when workload is deployment. In most
 ## cases, a 'RollingUpdate' is recommended. However, in the case of stateful
 ## workloads on deployments (i.e.: deployment workload with mounted persistent
