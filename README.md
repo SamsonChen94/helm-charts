@@ -58,6 +58,7 @@ $ helm delete --namespace <NAMESPACE> <APPLICATION_NAME>
 | `resources` | Optional. The [resource allocation](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) for the workload. | dict |
 | [`scalingConfig`](#scalingconfig-configurations) | Optional. Scaling configuration for **deployment** workloads only. | dict |
 | [`hpa`](#hpa-configurations) | Optional. Creates a [horizontal pod autoscaler](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) in charge of dynamically scaling the workload according to a designated metric. | dict |
+| [`cronSettings`](#cronsettings-configurations) | Required if `workload` is set to **cronjob**. Cron job configuration responsible for the running short-lived tasks. | dict |
 | [`configurations`](#configurations-configurations) | Optional. Creates a [configuration map](https://kubernetes.io/docs/concepts/configuration/configmap/) Kubernetes resource responsible for injecting variables and files into the workload via environment variables and configuration mapping respectively.
 | [`secrets`](#secrets-configurations) | Optional. Creates a [secret](https://kubernetes.io/docs/concepts/configuration/secret/) Kubernetes resource responsible for injecting variables and files into the workload via encoded secrets. | dict |
 | [`additionalContainers`](#additionalcontainers-configurations) | Optional. Creates additional containers attached to a single Kubernetes pod. | list |
@@ -172,6 +173,16 @@ $ helm delete --namespace <NAMESPACE> <APPLICATION_NAME>
 | `max` | Required if `hpa` is defined and `hpa.enabled` is set to **true**. Sets the maximum number of replicas the workload can scale up to. | int |
 | `targetCPU` | Required if `hpa` is defined and `hpa.enabled` is set to **true**. The average CPU utilization target of the related workload. Once the average CPU utilization of all replicas exceeds this amount, the horizontal pod autoscaler will scale the workload replica count up. <br>NOTE: Customized scaling down behavior and additional scaling metrics are not supported (yet). | int |
 
+### `cronSettings` configurations
+
+| Parameter | Description | Type |
+| --------- | ----------- | ---- |
+| `enabled` | Optional. Switch for turning the cron job on or off while still creating the Kubernetes resource. Defaults to **true**. | boolean |
+| `schedule` | Required if `cronSettings` is defined. Configures the cron schedule for the cron job Kubernetes resource. | string |
+| `concurrency` | Optional. Controls the concurrency policy of the cron job. [Valid values are **Allow**, **Forbid**, and **Replace**](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/cron-job-v1/#CronJobSpec:~:text=CronJobTimeZone%20feature%20gate.-,concurrencyPolicy,-(string)). Defaults to **Allow**. | string |
+| `maxFailedHistory` | Optional. Controls the number of failed job pods to retain in Kubernetes. | int |
+| `maxSucceedHistory` | Optional. Controls the number of successful job jobs to retain in Kubernetes. | int |
+
 ### `configurations` configurations
 
 | Parameter | Description | Type |
@@ -268,6 +279,5 @@ $ helm secrets dec ./helm-secrets/<DIR_WITH_SOPS_YAML>/<UNENCRYPTED_FILE>
 - Add `kind: ClusterRole`
 - Add `kind: ClusterRoleBinding`
 - Add `kind: ServiceAccount`
-- Add `kind: CronJob`
 - Add `kind: StatefulSet`
 - Add `kind: DaemonSet`
