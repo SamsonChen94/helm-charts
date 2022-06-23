@@ -53,6 +53,8 @@ $ helm delete --namespace <NAMESPACE> <APPLICATION_NAME>
 | `imageName` | Required if `workload` is defined. The docker image name and domain path to deploy to Kubernetes. | string |
 | `imageTag` | Required if `workload` is defined. The docker image tag to deploy to Kubernetes. | string |
 | `imagePullPolicy` | Optional. The behavior of Kubelet for downloading Docker images. [Reference](https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy) | string |
+| `command` | Optional. Declares commands for main workload container. Commands in Kubernetes correspond to **ENTRYPOINT** in Docker. [Reference](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#notes:~:text=your%20new%20arguments.-,Note,-%3A%20The%20command) | string |
+| `argument` | Optional. Declares args for main workload container. Arguments in here are the command line arguments for the command as defined in either the container image or the `command` configuration. | string |
 | [`services`](#services-configurations) | Optional. Kubernetes service configuration responsible for Kubernetes internal network traffic. | dict |
 | [`ingress`](#ingress-configurations) | Optional. Creates a provider dependent Kubernetes [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). | dict |
 | `resources` | Optional. The [resource allocation](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) for the workload. | dict |
@@ -205,6 +207,8 @@ $ helm delete --namespace <NAMESPACE> <APPLICATION_NAME>
 | `imageName` | Required. The docker image name and domain path to deploy as an additional container. | string |
 | `imageTag` | Required. The docker image tag to deploy to Kubernetes. | string |
 | `imagePullPolicy` | Optional. The behavior of Kubelet for downloading Docker images. [Reference](https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy) | string |
+| `command` | Optional. Declares commands for main workload container. Commands in Kubernetes correspond to **ENTRYPOINT** in Docker. [Reference](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#notes:~:text=your%20new%20arguments.-,Note,-%3A%20The%20command) | string |
+| `argument` | Optional. Declares args for main workload container. Arguments in here are the command line arguments for the command as defined in either the container image or the `command` configuration. | string |
 | [`services`](#services-configurations) | Optional. Kubernetes service configuration responsible for Kubernetes internal network traffic. <br>NOTE: In the case of repeated configurations in the main container (top level `services` parameter), the configuration will be merged into the same Kubernetes service resource. | dict |
 | `resources` | Optional. The [resource allocation](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) for the workload. | dict |
 | [`configurations`](#configurations-configurations) | Optional. Creates a [configuration map](https://kubernetes.io/docs/concepts/configuration/configmap/) Kubernetes resource responsible for injecting variables and files into the workload via environment variables and configuration mapping respectively.
