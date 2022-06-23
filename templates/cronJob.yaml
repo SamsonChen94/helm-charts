@@ -1,0 +1,30 @@
+{{- /*
+  This resource is only for cron jobs. One of the main workloads in a
+  Kubernetes environment. Cron jobs are normally standalone processes that does
+  not require any additional scaling or networking configurations.
+  Ref: https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs
+*/}}
+{{- if eq .Values.workload "cronjob" }}
+{{- if not .Values.cronSettings }}
+{{- fail ( printf "\n\nError --> Workload is set to 'cronjob' but cronSettings is missing\n" ) -}}
+{{- end }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    {{- include "labels" . | nindent 4 }}
+  name: {{ template "fullname" . }}-cj
+  namespace: {{ .Release.Namespace }}
+spec:
+  concurrencyPolicy: {{ .Values.cronSettings.concurrency | default "Allow" }}
+  failedJobsHistoryLimit: {{ .Values.cronSettings.maxFailedHistory | default 1 }}
+  jobTemplate:
+    metadata:
+      labels:
+        {{- include "labels" . | nindent 8 }}
+    spec:
+      {{- include "podSpecTemplate" . | indent 6 }}
+  schedule: {{ required "\n\nError --> cronSettings.schedule required if workload is set to cronjob" .Values.cronSettings.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.cronSettings.maxSucceedHistory | default 3 }}
+  suspend: {{ not .Values.cronSettings.enabled | default false }}
+{{- end }}

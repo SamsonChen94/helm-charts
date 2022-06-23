@@ -130,6 +130,14 @@
 #   max: 4
 #   targetCPU: 80
 
+## Cron job configurations. Should only apply when workload is a cron job.
+# cronSettings:
+#   enabled: false
+#   schedule: 5 4 * * *
+#   concurrency: Forbid
+#   maxFailedHistory: 1
+#   maxSucceedHistory: 1
+
 ## Inject configuration files or environment variables into deployment via
 ## configuration mapping
 # configurations:
@@ -151,6 +159,7 @@
 # additionalContainers:
 #   - name: secondary-container
 #     imageName: nginx
+#     imageTag: latest
 #     imagePullPolicy: IfNotPresent
 #     services:
 #       clusterIP:
