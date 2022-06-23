@@ -1,3 +1,5 @@
+{{/* vim: set filetype=mustache: */}}
+
 {{/*
   Creates pod template portions of workloads. A few Kubernetes resources
   inherently repeats this configuration since all non-disabled workloads must
