@@ -8,6 +8,7 @@
 {{- if not .Values.cronSettings }}
 {{- fail ( printf "\n\nError --> Workload is set to 'cronjob' but cronSettings is missing\n" ) -}}
 {{- end }}
+{{- $cron := .Values.cronSettings }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -16,15 +17,18 @@ metadata:
   name: {{ template "fullname" . }}-cj
   namespace: {{ .Release.Namespace }}
 spec:
-  concurrencyPolicy: {{ .Values.cronSettings.concurrency | default "Allow" }}
-  failedJobsHistoryLimit: {{ .Values.cronSettings.maxFailedHistory | default 1 }}
+  {{- if and ( and ( ne $cron.concurrency "Allow" ) ( ne $cron.concurrency "Forbid" ) ) ( and ( ne $cron.concurrency "Replace" ) ( not ( empty $cron.concurrency ) ) )}}
+  {{- fail ( printf "\n\nError --> Invalid cronSettings.concurrency detected\n" ) -}}
+  {{- end }}
+  concurrencyPolicy: {{ $cron.concurrency | default "Allow" }}
+  failedJobsHistoryLimit: {{ $cron.maxFailedHistory | default 1 }}
   jobTemplate:
     metadata:
       labels:
         {{- include "labels" . | nindent 8 }}
     spec:
       {{- include "podSpecTemplate" . | indent 6 }}
-  schedule: {{ required "\n\nError --> cronSettings.schedule required if workload is set to cronjob" .Values.cronSettings.schedule | quote }}
-  successfulJobsHistoryLimit: {{ .Values.cronSettings.maxSucceedHistory | default 3 }}
-  suspend: {{ not .Values.cronSettings.enabled | default false }}
+  schedule: {{ required "\n\nError --> cronSettings.schedule required if workload is set to cronjob" $cron.schedule | quote }}
+  successfulJobsHistoryLimit: {{ $cron.maxSucceedHistory | default 3 }}
+  suspend: {{ not $cron.enabled | default false }}
 {{- end }}
