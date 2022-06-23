@@ -4,6 +4,9 @@ imageName: nginx
 imageTag: latest
 imagePullPolicy: IfNotPresent
 
+command: /bin/bash
+argument: test.sh foo bar
+
 resources:
   limits:
     cpu: 100m
@@ -22,6 +25,8 @@ additionalContainers:
     imageName: nginx
     imageTag: v1.0.0
     imagePullPolicy: IfNotPresent
+    command: /bin/sh
+    argument: test-2.sh foo2 bar2
     resources:
       limits:
         cpu: 200m

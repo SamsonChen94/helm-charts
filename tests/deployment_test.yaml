@@ -155,6 +155,92 @@ tests:
             requests:
               cpu: 200m
               memory: 200Mi
+  - it: should return correct commands and arguments for main container only
+    set:
+      workload: deployment
+      imageName: nginx
+      imageTag: latest
+      command: /bin/bash
+      argument: test.sh foo bar
+      additionalContainers:
+        - name: secondary-container
+          imageName: nginx
+          imageTag: latest
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value:
+            - /bin/bash
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - test.sh
+            - foo
+            - bar
+      - isNull:
+          path: spec.template.spec.containers[1].command
+      - isNull:
+          path: spec.template.spec.containers[1].args
+  - it: should return correct command for secondary container only
+    set:
+      workload: deployment
+      imageName: nginx
+      imageTag: latest
+      additionalContainers:
+        - name: secondary-container
+          imageName: nginx
+          imageTag: latest
+          command: /bin/sh
+          argument: test-2.sh foo2 bar2
+    asserts:
+      - isNull:
+          path: spec.template.spec.containers[0].command
+      - isNull:
+          path: spec.template.spec.containers[0].args
+      - equal:
+          path: spec.template.spec.containers[1].command
+          value:
+            - /bin/sh
+      - equal:
+          path: spec.template.spec.containers[1].args
+          value:
+            - test-2.sh
+            - foo2
+            - bar2
+  - it: should return correct commands and arguments for all containers
+    set:
+      workload: deployment
+      imageName: nginx
+      imageTag: latest
+      command: /bin/bash
+      argument: test.sh foo bar
+      additionalContainers:
+        - name: secondary-container
+          imageName: nginx
+          imageTag: latest
+          command: /bin/sh
+          argument: test-2.sh foo2 bar2
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value:
+            - /bin/bash
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - test.sh
+            - foo
+            - bar
+      - equal:
+          path: spec.template.spec.containers[1].command
+          value:
+            - /bin/sh
+      - equal:
+          path: spec.template.spec.containers[1].args
+          value:
+            - test-2.sh
+            - foo2
+            - bar2
   - it: should exclude undefined yaml data
     values:
       - ./values/deploy-only.yaml
@@ -162,13 +248,9 @@ tests:
       - isNull:
           path: spec.template.metadata.annotations
       - isNull:
-          path: spec.template.spec.containers[0].args
-      - isNull:
           path: spec.template.spec.containers[0].env
       - isNull:
           path: spec.template.spec.containers[0].volumeMounts
-      - isNull:
-          path: spec.template.spec.containers[1].args
       - isNull:
           path: spec.template.spec.containers[1].env
       - isNull:
