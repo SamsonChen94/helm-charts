@@ -168,6 +168,95 @@ tests:
             requests:
               cpu: 200m
               memory: 200Mi
+  - it: should return correct commands and arguments for main container only
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      command: /bin/bash
+      argument: test.sh foo bar
+      cronSettings.schedule: "* * * * *"
+      additionalContainers:
+        - name: secondary-container
+          imageName: nginx
+          imageTag: latest
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].command
+          value:
+            - /bin/bash
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].args
+          value:
+            - test.sh
+            - foo
+            - bar
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].command
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].args
+  - it: should return correct command for secondary container only
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      cronSettings.schedule: "* * * * *"
+      additionalContainers:
+        - name: secondary-container
+          imageName: nginx
+          imageTag: latest
+          command: /bin/sh
+          argument: test-2.sh foo2 bar2
+    asserts:
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].command
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].args
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[1].command
+          value:
+            - /bin/sh
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[1].args
+          value:
+            - test-2.sh
+            - foo2
+            - bar2
+  - it: should return correct commands and arguments for all containers
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      command: /bin/bash
+      argument: test.sh foo bar
+      cronSettings.schedule: "* * * * *"
+      additionalContainers:
+        - name: secondary-container
+          imageName: nginx
+          imageTag: latest
+          command: /bin/sh
+          argument: test-2.sh foo2 bar2
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].command
+          value:
+            - /bin/bash
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].args
+          value:
+            - test.sh
+            - foo
+            - bar
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[1].command
+          value:
+            - /bin/sh
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[1].args
+          value:
+            - test-2.sh
+            - foo2
+            - bar2
   - it: should exclude undefined yaml data
     values:
       - ./values/cj-only.yaml
@@ -175,13 +264,9 @@ tests:
       - isNull:
           path: spec.jobTemplate.spec.template.metadata.annotations
       - isNull:
-          path: spec.jobTemplate.spec.template.spec.containers[0].args
-      - isNull:
           path: spec.jobTemplate.spec.template.spec.containers[0].env
       - isNull:
           path: spec.jobTemplate.spec.template.spec.containers[0].volumeMounts
-      - isNull:
-          path: spec.jobTemplate.spec.template.spec.containers[1].args
       - isNull:
           path: spec.jobTemplate.spec.template.spec.containers[1].env
       - isNull:
