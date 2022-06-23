@@ -1,0 +1,52 @@
+workload: cronjob
+
+imageName: nginx
+imageTag: latest
+
+services:
+  nodePort:
+    portConfigs:
+      - name: name-5
+        containerPort: 8080
+      - name: name-6
+        containerPort: 8080
+        servicePort: 8081
+      - name: name-7
+        containerPort: 8082
+        servicePort: 8082
+
+ingress:
+  enabled: true
+  ingressConfig:
+    - reservedIPName: "example-external-static-ip-name"
+      ssl: false
+      targets:
+        - domainName: "example.com"
+          serviceTargets:
+            - domainPath: "/*"
+              servicePort: 8080
+            - domainPath: "/foo/*"
+              servicePort: 8081
+        - domainName: "example-2.com"
+          serviceTargets:
+            - domainPath: "/*"
+              servicePort: 8080
+    - reservedIPName: "example-external-static-ip-name-2"
+      targets:
+        - domainName: "example-3.com"
+          serviceTargets:
+            - domainPath: "/*"
+              servicePort: 8082
+
+additionalContainers:
+  - name: secondary-container
+    imageName: nginx
+    imageTag: v1.0.0
+    services:
+      clusterIP:
+        portConfigs:
+          - name: name-0
+            containerPort: 8080
+
+cronSettings:
+  schedule: 5 4 * * *

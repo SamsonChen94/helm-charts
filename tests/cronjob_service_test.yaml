@@ -1,0 +1,76 @@
+suite: test cron job with services
+templates:
+  - cronJob.yaml
+  - service.yaml
+tests:
+  - it: should return correct document count
+    values:
+      - ./values/cj-svc.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: cronJob.yaml
+      - hasDocuments:
+          count: 2
+        template: service.yaml
+  - it: should return correct information for service-less container port
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      services:
+        none:
+          portConfigs:
+            - name: name-0
+              containerPort: 8080
+      cronSettings.schedule: "* * * * *"
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: service.yaml
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].ports
+          content:
+            containerPort: 8080
+            name: name-0
+            protocol: TCP
+        template: cronJob.yaml
+  - it: should have correct cronjob information all container ports
+    values:
+      - ./values/cj-svc.yaml
+    asserts:
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].ports
+          content:
+            containerPort: 8080
+            name: name-0
+            protocol: TCP
+        template: cronJob.yaml
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].ports
+          content:
+            containerPort: 8081
+            name: name-1
+            protocol: UDP
+        template: cronJob.yaml
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].ports
+          content:
+            containerPort: 8080
+            name: name-2
+            protocol: TCP
+        template: cronJob.yaml
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].ports
+          content:
+            containerPort: 8081
+            name: name-3
+            protocol: TCP
+        template: cronJob.yaml
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[1].ports
+          content:
+            containerPort: 8080
+            name: name-0
+            protocol: TCP
+        template: cronJob.yaml

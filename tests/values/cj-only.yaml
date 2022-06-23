@@ -1,0 +1,33 @@
+workload: cronjob
+
+imageName: nginx
+imageTag: latest
+imagePullPolicy: IfNotPresent
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 100Mi
+  requests:
+    cpu: 100m
+    memory: 100Mi
+
+cronSettings:
+  enabled: true
+  schedule: 5 4 * * *
+  concurrency: Forbid
+  maxFailedHistory: 1
+  maxSucceedHistory: 1
+
+additionalContainers:
+  - name: secondary-container
+    imageName: nginx
+    imageTag: v1.0.0
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 200m
+        memory: 200Mi
+      requests:
+        cpu: 200m
+        memory: 200Mi

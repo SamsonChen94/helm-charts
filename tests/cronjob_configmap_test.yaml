@@ -1,0 +1,199 @@
+suite: test cron job with config map
+templates:
+  - cronJob.yaml
+  - configMap.yaml
+tests:
+  - it: should return correct document count
+    values:
+      - ./values/cj-cm.yaml
+      - ./values/example.config.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: cronJob.yaml
+      - hasDocuments:
+          count: 1
+        template: configMap.yaml
+  - it: should contain checksum annotation for configmaps
+    values:
+      - ./values/cj-cm.yaml
+      - ./values/example.config.yaml
+    asserts:
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.metadata.annotations
+        template: cronJob.yaml
+  - it: should return configmap for main container only
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      cronSettings.schedule: "* * * * *"
+      configurations:
+        files:
+          - config.conf
+        strings:
+          - key1
+      additionalContainers:
+        - name: secondary-container
+          imageName: nginx
+          imageTag: v1.0.0
+    values:
+      - ./values/example.config.yaml
+    asserts:
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+        template: cronJob.yaml
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[0]
+          value:
+            name: key1
+            valueFrom:
+              configMapKeyRef:
+                name: RELEASE-NAME-cm
+                key: key1
+        template: cronJob.yaml
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].volumeMounts
+        template: cronJob.yaml
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].volumeMounts
+          content:
+            mountPath: /mount/config
+            name: config
+        template: cronJob.yaml
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].env
+        template: cronJob.yaml
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].volumeMounts
+        template: cronJob.yaml
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.volumes
+        template: cronJob.yaml
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.volumes
+          content:
+            configMap:
+              name: RELEASE-NAME-cm
+            name: config
+        template: cronJob.yaml
+  - it: should return configmap for additional container only
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      cronSettings.schedule: "* * * * *"
+      additionalContainers:
+        - name: secondary-container
+          imageName: nginx
+          imageTag: v1.0.0
+          configurations:
+            files:
+              - config3.sh
+            strings:
+              - key3
+    values:
+      - ./values/example.config.yaml
+    asserts:
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+        template: cronJob.yaml
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].volumeMounts
+        template: cronJob.yaml
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].env
+        template: cronJob.yaml
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[1].env[0]
+          value:
+            name: key3
+            valueFrom:
+              configMapKeyRef:
+                name: RELEASE-NAME-cm
+                key: key3
+        template: cronJob.yaml
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].volumeMounts
+        template: cronJob.yaml
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[1].volumeMounts
+          content:
+            mountPath: /mount/config
+            name: config
+        template: cronJob.yaml
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.volumes
+        template: cronJob.yaml
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.volumes
+          content:
+            configMap:
+              name: RELEASE-NAME-cm
+            name: config
+        template: cronJob.yaml
+  - it: should return configmap as container environment variables
+    values:
+      - ./values/cj-cm.yaml
+      - ./values/example.config.yaml
+    asserts:
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+        template: cronJob.yaml
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[0]
+          value:
+            name: key1
+            valueFrom:
+              configMapKeyRef:
+                name: RELEASE-NAME-cm
+                key: key1
+        template: cronJob.yaml
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[1]
+          value:
+            name: key2
+            valueFrom:
+              configMapKeyRef:
+                name: RELEASE-NAME-cm
+                key: key2
+        template: cronJob.yaml
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].env
+        template: cronJob.yaml
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[1].env[0]
+          value:
+            name: key3
+            valueFrom:
+              configMapKeyRef:
+                name: RELEASE-NAME-cm
+                key: key3
+        template: cronJob.yaml
+  - it: should return configmap as container mounted file
+    values:
+      - ./values/cj-cm.yaml
+      - ./values/example.config.yaml
+    asserts:
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].volumeMounts
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].volumeMounts
+          content:
+            mountPath: /mount/config
+            name: config
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].volumeMounts
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[1].volumeMounts
+          content:
+            mountPath: /mount/config
+            name: config
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.volumes
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.volumes
+          content:
+            configMap:
+              name: RELEASE-NAME-cm
+            name: config

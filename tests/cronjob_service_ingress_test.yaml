@@ -1,0 +1,96 @@
+suite: test deployment with services and ingress
+templates:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+tests:
+  - it: should return correct document count
+    values:
+      - ./values/deploy-svc-ing.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: deployment.yaml
+      - hasDocuments:
+          count: 1
+        template: service.yaml
+      - hasDocuments:
+          count: 2
+        template: ingress.yaml
+  - it: should contain node port service type with ingress
+    values:
+      - ./values/deploy-svc-ing.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: NodePort
+        template: service.yaml
+  - it: should have correct references from ingress to service to workload for port 8080
+    values:
+      - ./values/deploy-svc-ing.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8080
+        template: deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[1].ports[0].containerPort
+          value: 8080
+        template: deployment.yaml
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8080
+        template: service.yaml
+      - equal:
+          path: spec.ports[0].port
+          value: 8080
+        template: service.yaml
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 8080
+        template: ingress.yaml
+      - equal:
+          path: spec.rules[1].http.paths[0].backend.service.port.number
+          value: 8080
+        template: ingress.yaml
+  - it: should have correct references from ingress to service to workload for port 8081
+    values:
+      - ./values/deploy-svc-ing.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8080
+        template: deployment.yaml
+      - equal:
+          path: spec.ports[1].targetPort
+          value: 8080
+        template: service.yaml
+      - equal:
+          path: spec.ports[1].port
+          value: 8081
+        template: service.yaml
+      - equal:
+          path: spec.rules[0].http.paths[1].backend.service.port.number
+          value: 8081
+        template: ingress.yaml
+  - it: should have correct references from ingress to service to workload for port 8082
+    values:
+      - ./values/deploy-svc-ing.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[2].containerPort
+          value: 8082
+        template: deployment.yaml
+      - equal:
+          path: spec.ports[2].targetPort
+          value: 8082
+        template: service.yaml
+      - equal:
+          path: spec.ports[2].port
+          value: 8082
+        template: service.yaml
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 8082
+        template: ingress.yaml
+        documentIndex: 1
