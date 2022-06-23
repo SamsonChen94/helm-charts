@@ -17,7 +17,7 @@ metadata:
   name: {{ template "fullname" . }}-hpa
   namespace: {{ .Release.Namespace }}
 spec:
-  maxReplicas: {{ required "\n\nError: --> hpa.max is required when HPA is enabled" $hpaArgs.hpa.max }}
+  maxReplicas: {{ $hpaArgs.hpa.max }}
   metrics:
     {{- if $hpaArgs.hpa.targetCPU }}
     - resource:
@@ -29,7 +29,7 @@ spec:
     {{- else }}
     {{- fail ( printf "\n\nError --> Scaling target metrics not found.\n" ) -}}
     {{- end }}
-  minReplicas: {{ required "\n\nError: --> hpa.min is required when HPA is enabled" $hpaArgs.hpa.min }}
+  minReplicas: {{ $hpaArgs.hpa.min }}
   scaleTargetRef:
     {{- if eq .Values.workload "deployment" }}
     apiVersion: apps/v1

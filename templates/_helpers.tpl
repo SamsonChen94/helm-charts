@@ -49,6 +49,8 @@ app: {{ template "fullname" . }}
 {{- define "hpaEnabled" -}}
   {{- if .hpa -}}
     {{- if .hpa.enabled -}}
+      {{ $_ := required "\n\nError: --> hpa.max is required when HPA is enabled" .hpa.max }}
+      {{ $_ := required "\n\nError: --> hpa.min is required when HPA is enabled" .hpa.min }}
       {{- if gt .hpa.min .hpa.max -}}
       {{- fail ( printf "\n\nError --> minReplicas cannot be a value larger than maxReplicas\n" ) -}}
       {{- end -}}
