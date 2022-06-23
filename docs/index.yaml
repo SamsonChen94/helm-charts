@@ -2,7 +2,22 @@ apiVersion: v1
 entries:
   helm-charts:
   - apiVersion: v2
-    created: "2022-06-21T17:55:45.442221+08:00"
+    created: "2022-06-23T16:09:55.064851+08:00"
+    description: Universal Helm chart template to be used for all future Helm deployments
+    digest: 594044671dd4b3d551467e46efb225c503f423d42f1599bf921071a5ba988fed
+    home: https://github.com/SamsonChen94/helm-charts
+    icon: https://helm.sh/img/helm.svg
+    kubeVersion: '>= 1.19.0-0'
+    maintainers:
+    - email: samsonchen1260@gmail.com
+      name: Samson Chen
+    name: helm-charts
+    type: application
+    urls:
+    - https://samsonchen94.github.io/helm-charts/helm-charts-1.2.0.tgz
+    version: 1.2.0
+  - apiVersion: v2
+    created: "2022-06-23T16:09:55.064546+08:00"
     description: Universal Helm chart template to be used for all future Helm deployments
     digest: fd2cda6bfcf6b59db918c4bdfd6c66766f4cc88b708a7879ada29ffd5ec43c1e
     home: https://github.com/SamsonChen94/helm-charts
@@ -17,7 +32,7 @@ entries:
     - https://samsonchen94.github.io/helm-charts/helm-charts-1.1.0.tgz
     version: 1.1.0
   - apiVersion: v2
-    created: "2022-06-21T17:55:45.441648+08:00"
+    created: "2022-06-23T16:09:55.064047+08:00"
     description: Universal Helm chart template to be used for all future Helm deployments
     digest: cec62d50ca558f6b886647cdef0e86943d1493f7a2737e738c9fc570fc9f771c
     home: https://github.com/SamsonChen94/helm-charts
@@ -33,7 +48,7 @@ entries:
     version: 1.0.4
   helmCharts:
   - apiVersion: v2
-    created: "2022-06-21T17:55:45.444987+08:00"
+    created: "2022-06-23T16:09:55.066966+08:00"
     description: Universal Helm chart template to be used for all future Helm deployments
     digest: c9d496416ecca42067d9fdd42f1c3c63320f6b8a459aa4c7323de6b031624d71
     home: https://github.com/SamsonChen94/helm-charts
@@ -48,7 +63,7 @@ entries:
     - https://samsonchen94.github.io/helm-charts/helmCharts-1.0.3.tgz
     version: 1.0.3
   - apiVersion: v2
-    created: "2022-06-21T17:55:45.444122+08:00"
+    created: "2022-06-23T16:09:55.066409+08:00"
     description: Universal Helm chart template to be used for all future Helm deployments
     digest: 37a89c4c7b169092c9cb43bc471c8f797615cd69a81d6b17173222fb9e716e00
     home: https://github.com/SamsonChen94/helm-charts
@@ -63,7 +78,7 @@ entries:
     - https://samsonchen94.github.io/helm-charts/helmCharts-1.0.2.tgz
     version: 1.0.2
   - apiVersion: v2
-    created: "2022-06-21T17:55:45.443571+08:00"
+    created: "2022-06-23T16:09:55.065834+08:00"
     description: Universal Helm chart template to be used for all future Helm deployments
     digest: befffe23569e9768cdac44ae286688c600bb3a014565854205c93e2532cba6bc
     home: https://github.com/SamsonChen94/helm-charts
@@ -78,7 +93,7 @@ entries:
     - https://samsonchen94.github.io/helm-charts/helmCharts-1.0.1.tgz
     version: 1.0.1
   - apiVersion: v2
-    created: "2022-06-21T17:55:45.442888+08:00"
+    created: "2022-06-23T16:09:55.065351+08:00"
     description: Universal Helm chart template to be used for all future Helm deployments
     digest: 3fe118b2c6cf2d9cd253db2309d07d3770b24a207e173abaa6f31a91c35db2b7
     home: https://github.com/SamsonChen94/helm-charts
@@ -92,4 +107,4 @@ entries:
     urls:
     - https://samsonchen94.github.io/helm-charts/helmCharts-1.0.0.tgz
     version: 1.0.0
-generated: "2022-06-21T17:55:45.440916+08:00"
+generated: "2022-06-23T16:09:55.063413+08:00"
