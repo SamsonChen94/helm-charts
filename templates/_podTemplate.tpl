@@ -32,7 +32,13 @@ template:
       {{- include "labels" . | nindent 6 }}
   spec:
     containers:
-      - {{ if or $configArgs.configOutput.configString $secretArgs.secretOutput.secretString -}}
+      - {{ if .Values.argument -}}
+        args:
+          {{- range $argument := ( mustRegexSplit " " .Values.argument -1 ) }}
+          - {{ $argument | quote }}
+          {{- end }}
+        {{ end -}}
+        {{ if or $configArgs.configOutput.configString $secretArgs.secretOutput.secretString -}}
         {{/*
           Implement all environment variables as config maps. That is,
           excluding secrets, all environment variables are defined solely in
@@ -56,6 +62,12 @@ template:
                 name: {{ template "fullname" $ }}-secret
                 key: {{ $value }}
           {{- end }}
+          {{- end }}
+        {{ end -}}
+        {{ if .Values.command -}}
+        command:
+          {{- range $command := ( mustRegexSplit " " .Values.command -1 ) }}
+          - {{ $command | quote }}
           {{- end }}
         {{ end -}}
         {{- include "imageNameTag" .Values }}
@@ -99,7 +111,13 @@ template:
       {{- include "configEnabledCheck" $additionalConfigArgs }}
       {{- $additionalSecretArgs := dict "secret" $additionalContainer "secretOutput" (dict) }}
       {{- include "secretEnabledCheck" $additionalSecretArgs }}
-      - {{ if or $additionalConfigArgs.configOutput.configString $additionalSecretArgs.secretOutput.secretString -}}
+      - {{ if $additionalContainer.argument -}}
+        args:
+          {{- range $argument := ( mustRegexSplit " " $additionalContainer.argument -1 ) }}
+          - {{ $argument | quote }}
+          {{- end }}
+        {{ end -}}
+        {{ if or $additionalConfigArgs.configOutput.configString $additionalSecretArgs.secretOutput.secretString -}}
         env:
           {{- if $additionalConfigArgs.configOutput.configString }}
           {{- range $value := $additionalConfigArgs.config.configurations.strings }}
@@ -118,6 +136,12 @@ template:
                 name: {{ template "fullname" $ }}-secret
                 key: {{ $value }}
           {{- end }}
+          {{- end }}
+        {{ end -}}
+        {{ if $additionalContainer.command -}}
+        command:
+          {{- range $command := ( mustRegexSplit " " $additionalContainer.command -1 ) }}
+          - {{ $command | quote }}
           {{- end }}
         {{ end -}}
         {{- include "imageNameTag" $additionalContainer }}

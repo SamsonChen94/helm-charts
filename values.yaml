@@ -13,6 +13,17 @@
 # imageName: nginx
 # imagePullPolicy: IfNotPresent
 
+## Container execution configuration. This setting overrides the original
+## container's CMD configuration.
+## command --> multi-string command (with spaces) that corresponds to Docker's
+##             `EntryPoint` field
+## argument --> multi-string command (with spaces) that corresponds to Docker's
+##             `CMD` field
+## i.e.: The following is equivalent to executing `/bin/bash test.sh foo bar`
+## Ref: https://docs.docker.com/engine/reference/builder
+# command: /bin/bash
+# argument: test.sh foo bar
+
 ## Service network configuration.
 ## Valid services: none, headlessClusterIP, clusterIP, nodePort, loadBalancer,
 ##                 and internalLoadBalancer
@@ -161,6 +172,8 @@
 #     imageName: nginx
 #     imageTag: latest
 #     imagePullPolicy: IfNotPresent
+#     command: /bin/sh
+#     argument: test-2.sh foo2 bar2
 #     services:
 #       clusterIP:
 #         portConfigs:
