@@ -20,6 +20,42 @@ scalingConfig:
   maxUnavailable: 0
   type: RollingUpdate
 
+liveness:
+  action:
+    exec:
+      command:
+        - cat
+        - /tmp/healthy
+  initialDelay: 5
+  period: 6
+  timeout: 7
+  failureThreshold: 1
+  successThreshold: 1
+
+readiness:
+  action:
+    exec:
+      command:
+        - cat
+        - /tmp/healthy2
+  initialDelay: 8
+  period: 9
+  timeout: 10
+  failureThreshold: 2
+  successThreshold: 1
+
+startup:
+  action:
+    exec:
+      command:
+        - cat
+        - /tmp/healthy3
+  initialDelay: 11
+  period: 12
+  timeout: 13
+  failureThreshold: 3
+  successThreshold: 1
+
 additionalContainers:
   - name: secondary-container
     imageName: nginx
@@ -34,3 +70,36 @@ additionalContainers:
       requests:
         cpu: 200m
         memory: 200Mi
+    liveness:
+      action:
+        exec:
+          command:
+            - cat
+            - /tmp/healthy4
+      initialDelay: 15
+      period: 16
+      timeout: 17
+      failureThreshold: 4
+      successThreshold: 1
+    readiness:
+      action:
+        exec:
+          command:
+            - cat
+            - /tmp/healthy5
+      initialDelay: 18
+      period: 19
+      timeout: 20
+      failureThreshold: 5
+      successThreshold: 1
+    startup:
+      action:
+        exec:
+          command:
+            - cat
+            - /tmp/healthy6
+      initialDelay: 21
+      period: 22
+      timeout: 23
+      failureThreshold: 6
+      successThreshold: 1
