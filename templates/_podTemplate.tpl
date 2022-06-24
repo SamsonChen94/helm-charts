@@ -32,68 +32,8 @@ template:
       {{- include "labels" . | nindent 6 }}
   spec:
     containers:
-      - {{ if .Values.argument -}}
-        args:
-          {{- range $argument := ( mustRegexSplit " " .Values.argument -1 ) }}
-          - {{ $argument | quote }}
-          {{- end }}
-        {{ end -}}
-        {{ if or $configArgs.configOutput.configString $secretArgs.secretOutput.secretString -}}
-        {{/*
-          Implement all environment variables as config maps. That is,
-          excluding secrets, all environment variables are defined solely in
-          the 'config' directory.
-        */ -}}
-        env:
-          {{- if $configArgs.configOutput.configString }}
-          {{- range $value := $configArgs.config.configurations.strings }}
-          - name: {{ $value }}
-            valueFrom:
-              configMapKeyRef:
-                name: {{ template "fullname" $ }}-cm
-                key: {{ $value }}
-          {{- end }}
-          {{- end }}
-          {{- if $secretArgs.secretOutput.secretString }}
-          {{- range $value := $secretArgs.secret.secrets.strings }}
-          - name: {{ $value }}
-            valueFrom:
-              secretKeyRef:
-                name: {{ template "fullname" $ }}-secret
-                key: {{ $value }}
-          {{- end }}
-          {{- end }}
-        {{ end -}}
-        {{ if .Values.command -}}
-        command:
-          {{- range $command := ( mustRegexSplit " " .Values.command -1 ) }}
-          - {{ $command | quote }}
-          {{- end }}
-        {{ end -}}
-        {{- include "imageNameTag" .Values }}
-        imagePullPolicy: {{ .Values.imagePullPolicy | default "Always" }}
-        name: {{ template "fullname" . }}
-        {{- include "workloadPortConfig" .Values.services | indent 8 }}
-        {{- if .Values.resources }}
-        resources:
-          {{- toYaml .Values.resources | nindent 10 }}
-        {{- end }}
-        {{- /*
-          Configure volume mounts to the working container. Note that
-          environment variables from config maps and secrets do not require
-          a volume mount to be defined.
-        */}}
-        {{- if or $configArgs.configOutput.configFile $secretArgs.secretOutput.secretFile }}
-        volumeMounts:
-          {{- if $configArgs.configOutput.configFile }}
-          - mountPath: /mount/config
-            name: config
-          {{- end }}
-          {{- if $secretArgs.secretOutput.secretFile }}
-          - mountPath: /mount/secret
-            name: secret
-          {{- end }}
-        {{- end }}
+      {{- $valuesArgs := dict "Release" .Release "Values" .Values "configArgs" $configArgs "secretArgs" $secretArgs }}
+      {{- include "containerTemplate" $valuesArgs | indent 6 }}
       {{- /*
         In some use cases, multiple additional containers are necessary for
         the business functions in a single pod. In such cases, additional
@@ -111,65 +51,14 @@ template:
       {{- include "configEnabledCheck" $additionalConfigArgs }}
       {{- $additionalSecretArgs := dict "secret" $additionalContainer "secretOutput" (dict) }}
       {{- include "secretEnabledCheck" $additionalSecretArgs }}
-      - {{ if $additionalContainer.argument -}}
-        args:
-          {{- range $argument := ( mustRegexSplit " " $additionalContainer.argument -1 ) }}
-          - {{ $argument | quote }}
-          {{- end }}
-        {{ end -}}
-        {{ if or $additionalConfigArgs.configOutput.configString $additionalSecretArgs.secretOutput.secretString -}}
-        env:
-          {{- if $additionalConfigArgs.configOutput.configString }}
-          {{- range $value := $additionalConfigArgs.config.configurations.strings }}
-          - name: {{ $value }}
-            valueFrom:
-              configMapKeyRef:
-                name: {{ template "fullname" $ }}-cm
-                key: {{ $value }}
-          {{- end }}
-          {{- end }}
-          {{- if $additionalSecretArgs.secretOutput.secretString }}
-          {{- range $value := $additionalSecretArgs.secret.secrets.strings }}
-          - name: {{ $value }}
-            valueFrom:
-              secretKeyRef:
-                name: {{ template "fullname" $ }}-secret
-                key: {{ $value }}
-          {{- end }}
-          {{- end }}
-        {{ end -}}
-        {{ if $additionalContainer.command -}}
-        command:
-          {{- range $command := ( mustRegexSplit " " $additionalContainer.command -1 ) }}
-          - {{ $command | quote }}
-          {{- end }}
-        {{ end -}}
-        {{- include "imageNameTag" $additionalContainer }}
-        imagePullPolicy: {{ $additionalContainer.imagePullPolicy | default "Always" }}
-        name: {{ $additionalContainer.name }}
-        {{- include "workloadPortConfig" $additionalContainer.services | indent 8 }}
-        {{- if $additionalContainer.resources }}
-        resources:
-          {{- toYaml $additionalContainer.resources | nindent 10 }}
-        {{- end }}
-        {{- /*
-          Configure volume mounts to the working container. Note that
-          environment variables from config maps and secrets do not require
-          a volume mount to be defined.
-        */}}
-        {{- if or $additionalConfigArgs.configOutput.configFile $additionalSecretArgs.secretOutput.secretFile }}
-        volumeMounts:
-          {{- if $additionalConfigArgs.configOutput.configFile }}
-          {{- $additionalContainerConfigFileEnabled = true }}
-          - mountPath: /mount/config
-            name: config
-          {{- end }}
-          {{- if $additionalSecretArgs.secretOutput.secretFile }}
-          {{- $additionalContainerSecretFileEnabled = true }}
-          - mountPath: /mount/secret
-            name: secret
-          {{- end }}
-        {{- end }}
+      {{- $additionalContainerArgs := dict "Release" $.Release "Values" $additionalContainer "configArgs" $additionalConfigArgs "secretArgs" $additionalSecretArgs }}
+      {{- include "containerTemplate" $additionalContainerArgs | indent 6 }}
+      {{- if $additionalConfigArgs.configOutput.configFile }}
+      {{- $additionalContainerConfigFileEnabled = true }}
+      {{- end }}
+      {{- if $additionalSecretArgs.secretOutput.secretFile }}
+      {{- $additionalContainerSecretFileEnabled = true }}
+      {{- end }}
       {{- end }}
       {{- end }}
     dnsPolicy: ClusterFirst
