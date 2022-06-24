@@ -6,6 +6,12 @@
   duplication, this additional helper procedure/function is introduced.
 */}}
 {{- define "containerTemplate" }}
+{{- $containerPortList := (list) }}
+{{- range $key, $value := .Values.services }}
+{{- range $containerPort := $value.portConfigs }}
+{{- $containerPortList = mustAppend $containerPortList $containerPort }}
+{{- end }}
+{{- end }}
 - {{ if .Values.argument -}}
   args:
     {{- range $argument := ( mustRegexSplit " " .Values.argument -1 ) }}
@@ -46,15 +52,30 @@
   {{ end -}}
   {{- include "imageNameTag" .Values }}
   imagePullPolicy: {{ .Values.imagePullPolicy | default "Always" }}
+  {{- if .Values.liveness }}
+  livenessProbe:
+    {{- $probeArgs := dict "probe" .Values.liveness "containerPortList" $containerPortList }}
+    {{- include "probe" $probeArgs | indent 4 }}
+  {{- end }}
   {{- if .Values.name }}
   name: {{ .Values.name }}
   {{- else }}
   name: {{ template "fullname" . }}
   {{- end }}
   {{- include "workloadPortConfig" .Values.services | indent 2 }}
+  {{- if .Values.readiness }}
+  readinessProbe:
+    {{- $probeArgs := dict "probe" .Values.readiness "containerPortList" $containerPortList }}
+    {{- include "probe" $probeArgs | indent 4 }}
+  {{- end }}
   {{- if .Values.resources }}
   resources:
     {{- toYaml .Values.resources | nindent 4 }}
+  {{- end }}
+  {{- if .Values.startup }}
+  startupProbe:
+    {{- $probeArgs := dict "probe" .Values.startup "containerPortList" $containerPortList }}
+    {{- include "probe" $probeArgs | indent 4 }}
   {{- end }}
   {{- /*
     Configure volume mounts to the working container. Note that

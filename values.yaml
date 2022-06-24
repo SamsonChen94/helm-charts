@@ -141,6 +141,54 @@
 #   max: 4
 #   targetCPU: 80
 
+## Livesness probe configuration. Liveness probes are used by Kubelet to
+## determine if a pod requires a restart.
+## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-command
+# liveness:
+#   action:
+#     exec:
+#       command:
+#         - cat
+#         - /tmp/healthy
+#   initialDelay: 0
+#   period: 1
+#   timeout: 1
+#   failureThreshold: 3
+#   successThreshold: 1
+
+## Readiness probe configuration. Readiness probes are used by Kubelet to
+## determine if the pod is ready to receive traffic. Kubelet will stop sending
+## traffic towards the pod if this probe fails.
+## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes
+# readiness:
+#   action:
+#     httpGet:
+#       httpHeaders:
+#         - name: Custom-Header
+#           value: foobar
+#       path: /healthz
+#       port: 8080
+#   initialDelay: 0
+#   period: 1
+#   timeout: 1
+#   failureThreshold: 3
+#   successThreshold: 1
+
+## Startup probe configuration. Startup probes are used by Kubelet to determine
+## if the pod is warmed up and ready to serve. Once configured, this probe
+## blocks all other checks from running until this (startup) probe successfully
+## passes all checks.
+## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-startup-probes
+# startup:
+#   action:
+#     tcpSocket:
+#       port: 80
+#   initialDelay: 10
+#   period: 5
+#   timeout: 60
+#   failureThreshold: 3
+#   successThreshold: 1
+
 ## Cron job configurations. Should only apply when workload is a cron job.
 # cronSettings:
 #   enabled: false

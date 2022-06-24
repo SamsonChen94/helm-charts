@@ -285,3 +285,38 @@ ports:
     {{- $_ := set .secretOutput "secretString" false -}}
   {{- end -}}
 {{- end -}}
+
+{{- define "probeValues" }}
+failureThreshold: {{ .failureThreshold | default 3 }}
+initialDelaySeconds: {{ .initialDelay | default 0 }}
+periodSeconds: {{ .period | default 1 }}
+successThreshold: {{ .successThreshold | default 1 }}
+timeoutSeconds: {{ .timeout | default 1 }}
+{{- end }}
+
+{{- define "probe" }}
+  {{- if .probe }}
+    {{- if .probe.action }}
+      {{- if gt ( len .probe.action ) 1 }}
+        {{- fail ( printf "\n\nError --> Only one action allowed per probe. Got:\n%s" ( toYaml .probe.action ) ) }}
+      {{- end }}
+      {{- if not ( or ( or ( hasKey .probe.action "exec" ) ( hasKey .probe.action "httpGet" ) ) ( hasKey .probe.action "tcpSocket" ) ) }}
+        {{- fail ( printf "\n\nError --> Invalid probe action. Got: %s" ( keys .probe.action | first ) ) }}
+      {{- end }}
+      {{- if hasKey .probe.action "httpGet" }}
+        {{- if or ( empty .containerPortList ) ( not ( has .probe.action.httpGet.port .containerPortList ) ) }}
+          {{- fail ( printf "\n\nError --> %s declared as HTTP probe port but not defined in 'services'. Maybe use 'services.none'?" ( .probe.action.httpGet.port | toString ) ) }}
+        {{- end }}
+      {{- end }}
+      {{- if hasKey .probe.action "tcpSocket" }}
+        {{- if or ( empty .containerPortList ) ( not ( has .probe.action.tcpSocket.port .containerPortList ) ) }}
+          {{- fail ( printf "\n\nError --> %s declared as TCP probe port but not defined in 'services'. Maybe use 'services.none'?" ( .probe.action.tcpSocket.port | toString ) ) }}
+        {{- end }}
+      {{- end }}
+{{ toYaml .probe.action }}
+    {{- else }}
+      {{- fail ( printf "\n\nError --> Probe execution details missing" ) }}
+    {{- end }}
+{{- include "probeValues" .probe }}
+  {{- end }}
+{{- end }}
