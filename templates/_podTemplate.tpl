@@ -11,6 +11,8 @@
 {{- include "configEnabledCheck" $configArgs }}
 {{- $secretArgs := dict "secret" .Values "secretOutput" (dict) }}
 {{- include "secretEnabledCheck" $secretArgs }}
+{{- $schedulingArgs := dict "scheduling" .Values "schedulingOutput" (dict) }}
+{{- include "schedulingEnabled" $schedulingArgs }}
 template:
   metadata:
     {{- /*
@@ -62,8 +64,20 @@ template:
       {{- end }}
       {{- end }}
     dnsPolicy: ClusterFirst
+    {{- if $schedulingArgs.schedulingOutput.selectorEnabled }}
+    nodeSelector:
+      {{- toYaml $schedulingArgs.scheduling.scheduling.nodeSelector | nindent 6 }}
+    {{- end }}
     restartPolicy: Always
     terminationGracePeriodSeconds: 10
+    {{- if $schedulingArgs.schedulingOutput.tolerationEnabled }}
+    tolerations:
+      {{- toYaml $schedulingArgs.scheduling.scheduling.taintToleration | nindent 6 }}
+    {{- end }}
+    {{- if $schedulingArgs.schedulingOutput.topologyEnabled }}
+    topologySpreadConstraints:
+      {{- toYaml $schedulingArgs.scheduling.scheduling.topology | nindent 6 }}
+    {{- end }}
     {{- /*
       Configure volume mounts to the Kubernetes node. Note that environment
       variables from config maps and secrets do not required a volume to be

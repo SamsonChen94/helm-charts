@@ -286,6 +286,48 @@ ports:
   {{- end -}}
 {{- end -}}
 
+{{- define "schedulingEnabled" -}}
+  {{- if .scheduling.scheduling -}}
+    {{- if ( and ( and .scheduling.scheduling.nodeSelector .scheduling.scheduling.taintToleration ) .scheduling.scheduling.topology ) -}}
+      {{- $_ := set .schedulingOutput "selectorEnabled" true -}}
+      {{- $_ := set .schedulingOutput "tolerationEnabled" true -}}
+      {{- $_ := set .schedulingOutput "topologyEnabled" true -}}
+    {{- else if ( and .scheduling.scheduling.nodeSelector .scheduling.scheduling.taintToleration ) -}}
+      {{- $_ := set .schedulingOutput "selectorEnabled" true -}}
+      {{- $_ := set .schedulingOutput "tolerationEnabled" true -}}
+      {{- $_ := set .schedulingOutput "topologyEnabled" false -}}
+    {{- else if ( and .scheduling.scheduling.nodeSelector .scheduling.scheduling.topology ) -}}
+      {{- $_ := set .schedulingOutput "selectorEnabled" true -}}
+      {{- $_ := set .schedulingOutput "tolerationEnabled" false -}}
+      {{- $_ := set .schedulingOutput "topologyEnabled" true -}}
+    {{- else if ( and .scheduling.scheduling.taintToleration .scheduling.scheduling.topology ) -}}
+      {{- $_ := set .schedulingOutput "selectorEnabled" false -}}
+      {{- $_ := set .schedulingOutput "tolerationEnabled" true -}}
+      {{- $_ := set .schedulingOutput "topologyEnabled" true -}}
+    {{- else if .scheduling.scheduling.nodeSelector -}}
+      {{- $_ := set .schedulingOutput "selectorEnabled" true -}}
+      {{- $_ := set .schedulingOutput "tolerationEnabled" false -}}
+      {{- $_ := set .schedulingOutput "topologyEnabled" false -}}
+    {{- else if .scheduling.scheduling.taintToleration -}}
+      {{- $_ := set .schedulingOutput "selectorEnabled" false -}}
+      {{- $_ := set .schedulingOutput "tolerationEnabled" true -}}
+      {{- $_ := set .schedulingOutput "topologyEnabled" false -}}
+    {{- else if .scheduling.scheduling.topology -}}
+      {{- $_ := set .schedulingOutput "selectorEnabled" false -}}
+      {{- $_ := set .schedulingOutput "tolerationEnabled" false -}}
+      {{- $_ := set .schedulingOutput "topologyEnabled" true -}}
+    {{- else -}}
+      {{- $_ := set .schedulingOutput "selectorEnabled" false -}}
+      {{- $_ := set .schedulingOutput "tolerationEnabled" false -}}
+      {{- $_ := set .schedulingOutput "topologyEnabled" false -}}
+    {{- end -}}
+  {{- else -}}
+    {{- $_ := set .schedulingOutput "selectorEnabled" false -}}
+    {{- $_ := set .schedulingOutput "tolerationEnabled" false -}}
+    {{- $_ := set .schedulingOutput "topologyEnabled" false -}}
+  {{- end -}}
+{{- end -}}
+
 {{- define "probeValues" }}
 failureThreshold: {{ .failureThreshold | default 3 }}
 initialDelaySeconds: {{ .initialDelay | default 0 }}

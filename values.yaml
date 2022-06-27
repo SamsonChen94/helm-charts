@@ -121,26 +121,6 @@
 #     cpu: 100m
 #     memory: 100Mi
 
-## Scaling configuration. Should only apply when workload is deployment. In most
-## cases, a 'RollingUpdate' is recommended. However, in the case of stateful
-## workloads on deployments (i.e.: deployment workload with mounted persistent
-## volumes), 'Recreate' would be recommended.
-## Ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
-# scalingConfig:
-#   maxSurge: 1
-#   maxUnavailable: 0
-#   type: RollingUpdate
-
-## Horizontal pod autoscaling configuration. Should only apply when workload is
-## either deployment or stateful set. Currently only supports scaling by CPU
-## utilization.
-## TODO: add custom metrics support and memory utilization scaling
-# hpa:
-#   enabled: true
-#   min: 1
-#   max: 4
-#   targetCPU: 80
-
 ## Livesness probe configuration. Liveness probes are used by Kubelet to
 ## determine if a pod requires a restart.
 ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-command
@@ -188,6 +168,51 @@
 #   timeout: 60
 #   failureThreshold: 3
 #   successThreshold: 1
+
+## Pod scheduling configuration. All pods, regardless of origin, can be
+## deployed to nodes with specific requirements. Such requirements include
+## but not limited to, specifying node by name, label, node specs, or topology.
+## WARNING: Altering these settings may cause a workload to be undeployable.
+##          Kindly ensure the configuration is correct before running
+##          deployments. This chart does NOT check these values' validity so
+##          errors may only be captured at the time of the deployment.
+## nodeSelector: https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes
+## taintToleration: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration
+## topology: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints
+# scheduling:
+#   nodeSelector:
+#     labelKeyFromNode: labelValueFromNode
+#   taintToleration:
+#     - effect: NO_SCHEDULE
+#       key: foo
+#       value: bar
+#   topology:
+#     - maxSkew: 1
+#       topologyKey: labelKeyFromNode
+#       whenUnsatisfiable: DoNotSchedule
+#       labelSelector:
+#         matchLabels:
+#           labelKeyFromPod: labelValueFromPod
+
+## Scaling configuration. Should only apply when workload is deployment. In most
+## cases, a 'RollingUpdate' is recommended. However, in the case of stateful
+## workloads on deployments (i.e.: deployment workload with mounted persistent
+## volumes), 'Recreate' would be recommended.
+## Ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+# scalingConfig:
+#   maxSurge: 1
+#   maxUnavailable: 0
+#   type: RollingUpdate
+
+## Horizontal pod autoscaling configuration. Should only apply when workload is
+## either deployment or stateful set. Currently only supports scaling by CPU
+## utilization.
+## TODO: add custom metrics support and memory utilization scaling
+# hpa:
+#   enabled: true
+#   min: 1
+#   max: 4
+#   targetCPU: 80
 
 ## Cron job configurations. Should only apply when workload is a cron job.
 # cronSettings:
