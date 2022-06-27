@@ -58,6 +58,10 @@ $ helm delete --namespace <NAMESPACE> <APPLICATION_NAME>
 | [`services`](#services-configurations) | Optional. Kubernetes service configuration responsible for Kubernetes internal network traffic. | dict |
 | [`ingress`](#ingress-configurations) | Optional. Creates a provider dependent Kubernetes [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). | dict |
 | `resources` | Optional. The [resource allocation](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) for the workload. | dict |
+| [`liveness`](#liveness-or-readiness-or-startup-configurations) | Optional. Configuration for [liveness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-command). Liveness probes are great for controlling when the pod needs a restart. | dict |
+| [`readiness`](#liveness-or-readiness-or-startup-configurations) | Optional. Configuration for [readiness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes). Readiness probes are great for controlling when to stop sending traffic to a pod. | dict |
+| [`startup`](#liveness-or-readiness-or-startup-configurations) | Optional. Configuration for [startup probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-startup-probes). Startup probes are great for pods that have a long warm up time. Supersedes all other probes. | dict |
+| [`scheduling`](#scheduling-configurations) | Optional. Controls where pods can be deploying in the Kubernetes cluster. | dict |
 | [`scalingConfig`](#scalingconfig-configurations) | Optional. Scaling configuration for **deployment** workloads only. | dict |
 | [`hpa`](#hpa-configurations) | Optional. Creates a [horizontal pod autoscaler](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) in charge of dynamically scaling the workload according to a designated metric. | dict |
 | [`cronSettings`](#cronsettings-configurations) | Required if `workload` is set to **cronjob**. Cron job configuration responsible for the running short-lived tasks. | dict |
@@ -157,6 +161,35 @@ $ helm delete --namespace <NAMESPACE> <APPLICATION_NAME>
 | `targets[*].serviceTargets` | Required if `ingress`, `ingress.ingressConfig`, and `ingress.ingressConfig[*].targets` are defined. Also required if `ingress.enabled` is set to **true**. Declares the target Kubernetes service configurations and domain path configurations. | list |
 | `targets[*].serviceTargets[*].domainPath` | Required if `ingress`, `ingress.ingressConfig`, `ingress.ingressConfig[*].targets`, and `ingress.ingressConfig[*].targets[*].serviceTargets` are defined. Also required if `ingress.enabled` is set to **true**. Sets the URL pathing to the service when traffic enters the ingress. Set to **/*** for all paths. | string |
 | `targets[*].serviceTargets[*].servicePort` | Required if `ingress`, `ingress.ingressConfig`, `ingress.ingressConfig[*].targets`, and `ingress.ingressConfig[*].targets[*].serviceTargets` are defined. Also required if `ingress.enabled` is set to **true**. Sets the service target port in which traffic will be diverted towards. <br>NOTE: This port must correspond to a valid port configuration in `services`. | int |
+
+### `liveness` or `readiness` or `startup` configurations
+
+| Parameter | Description | Type |
+| --------- | ----------- | ---- |
+| `action` | Required if `liveness`, `readiness`, or `startup` are defined, with **only** a single `action` for each. This determines the execution type for the probe. | dict |
+| `action.exec` | Optional. Mutually exclusive to `httpGet` and `tcpSocket`. `exec` configuration instructs the probe to test the container using a particular command. | dict |
+| `action.exec.command` | Required if `action.exec` is defined. The bash-like command instruction for the probe to execute and determine the status of the container. | list |
+| `action.httpGet` | Optional. Mutually exclusive to `exec` and `tcpSocket`. `httpGet` configuration instructs the probe to test the container using a HTTP get request and with custom header support if needed. The results of the test will be used to determine the status of the container. | dict |
+| `action.httpGet.httpHeaders` | Optional. A list of custom headers for the HTTP request to be used as a test to determine the status of the container. | list |
+| `action.httpGet.httpHeaders[*].name` | Required if `action.httpGet.httpHeaders` is defined. The header name to be used as a test to determine the status of the container. | string |
+| `action.httpGet.httpHeaders[*].value` | Required if `action.httpGet.httpHeaders` is defined. The header value to be used as a test to determine the status of the container. | string |
+| `action.httpGet.path` | Required if `action.httpGet` is defined. The path of the HTTP request the probe will use to test the status of the container. | string |
+| `action.httpGet.port` | Required if `action.httpGet` is defined. The port number of the HTTP request the probe will use to test the status of the container. | int |
+| `action.tcpSocket` | Optional. Mutually exclusive to `exec` and `httpGet`. `tcpSocket` configuration instructs the probe to test the container using a TCP socket. The results of the test will be used to determine the status of the container. | dict |
+| `action.tcpSocket.port` | Required if `action.tcpSocket` is defined. The port number of the TCP socket the probe will use to test the status of the container. | int |
+| `failureThreshold` | Optional. The number of consecutive times the probe fails the probing test to be considered to be in a failed state. Defaults to 3. | int |
+| `initialDelay` | Optional. The number of seconds to wait before the probe starts its first test. Defaults to 0 seconds (immediately start testing). | int |
+| `periodSeconds` | Optional. The number of seconds to wait between each probe test. Defaults to 1. | int |
+| `successThreshold` | Optional. The number of consecutive times the probe succeeds the probing test to be considered to be in a running/healthy state. Defaults to 1. | int |
+| `timeoutSeconds` | Optional. The number of seconds the probe test will time out. Defaults to 1. | int |
+
+### `scheduling` configurations
+
+| Parameter | Description | Type |
+| --------- | ----------- | ---- |
+| `nodeSelector` | Optional. The label key value pair to be used as a filter to specific select which node to schedule the pod to. | dict |
+| `taintToleration` | Optional. List of tolerations. Tolerations are used to bypass any pre-configured node taints. Under the hood, taints in Kubernetes nodes are used to prevent some kind of workload to be deployed onto the node. [Reference](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration) | list |
+| `topology` | Optional. List of topology configurations. Used to control the spread of pods across a specific topology (i.e.: zone). [Reference](https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints) | list |
 
 ### `scalingConfig` configurations
 
