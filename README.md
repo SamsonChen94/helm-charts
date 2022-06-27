@@ -10,9 +10,9 @@ $ helm repo update
 $ helm secrets upgrade \
   --install \
   --namespace <NAMESPACE> \
-  --set <PATH_TO_VALUES_FILE> \
-  --set <PATH_TO_CONFIG_FILE> \
-  --set <PATH_TO_SECRET_FILE> \
+  --values <PATH_TO_VALUES_FILE> \
+  --values <PATH_TO_CONFIG_FILE> \
+  --values <PATH_TO_SECRET_FILE> \
   <APPLICATION_NAME> helm-charts/helm-charts
 ```
 
@@ -32,9 +32,9 @@ $ helm secrets upgrade \
 $ helm secrets upgrade \
   --install \
   --namespace <NAMESPACE> \
-  --set <PATH_TO_VALUES_FILE> \
-  --set <PATH_TO_CONFIG_FILE> \
-  --set <PATH_TO_SECRET_FILE> \
+  --values <PATH_TO_VALUES_FILE> \
+  --values <PATH_TO_CONFIG_FILE> \
+  --values <PATH_TO_SECRET_FILE> \
   <APPLICATION_NAME> helm-charts/helm-charts
 ```
 
@@ -244,6 +244,9 @@ $ helm delete --namespace <NAMESPACE> <APPLICATION_NAME>
 | `argument` | Optional. Declares args for main workload container. Arguments in here are the command line arguments for the command as defined in either the container image or the `command` configuration. | string |
 | [`services`](#services-configurations) | Optional. Kubernetes service configuration responsible for Kubernetes internal network traffic. <br>NOTE: In the case of repeated configurations in the main container (top level `services` parameter), the configuration will be merged into the same Kubernetes service resource. | dict |
 | `resources` | Optional. The [resource allocation](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) for the workload. | dict |
+| [`liveness`](#liveness-or-readiness-or-startup-configurations) | Optional. Configuration for [liveness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-command). Liveness probes are great for controlling when the pod needs a restart. | dict |
+| [`readiness`](#liveness-or-readiness-or-startup-configurations) | Optional. Configuration for [readiness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes). Readiness probes are great for controlling when to stop sending traffic to a pod. | dict |
+| [`startup`](#liveness-or-readiness-or-startup-configurations) | Optional. Configuration for [startup probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-startup-probes). Startup probes are great for pods that have a long warm up time. Supersedes all other probes. | dict |
 | [`configurations`](#configurations-configurations) | Optional. Creates a [configuration map](https://kubernetes.io/docs/concepts/configuration/configmap/) Kubernetes resource responsible for injecting variables and files into the workload via environment variables and configuration mapping respectively.
 | [`secrets`](#secrets-configurations) | Optional. Creates a [secret](https://kubernetes.io/docs/concepts/configuration/secret/) Kubernetes resource responsible for injecting variables and files into the workload via encoded secrets. | dict |
 
