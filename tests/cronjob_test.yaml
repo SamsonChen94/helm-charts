@@ -120,6 +120,26 @@ tests:
       - equal:
           path: spec.suspend
           value: true
+  - it: should return default cron value settings
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      cronSettings:
+        schedule: "* * * * *"
+    asserts:
+      - equal:
+          path: spec.suspend
+          value: false
+      - equal:
+          path: spec.concurrencyPolicy
+          value: Allow
+      - equal:
+          path: spec.successfulJobsHistoryLimit
+          value: 3
+      - equal:
+          path: spec.failedJobsHistoryLimit
+          value: 1
   - it: should return correct resource configuration for main container only
     set:
       workload: cronjob
@@ -257,20 +277,207 @@ tests:
             - test-2.sh
             - foo2
             - bar2
-  - it: should exclude undefined yaml data
+  - it: should only return liveness probe for main container
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      cronSettings.schedule: "* * * * *"
+      liveness:
+        action:
+          exec:
+            command:
+              - cat
+              - /tmp/healthy
+      additionalContainers:
+        - name: secondary-container
+          imageName: nginx
+          imageTag: latest
+    asserts:
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].livenessProbe
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].livenessProbe
+  - it: should only return liveness probe for secondary container
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      cronSettings.schedule: "* * * * *"
+      additionalContainers:
+        - name: secondary-container
+          imageName: nginx
+          imageTag: latest
+          liveness:
+            action:
+              exec:
+                command:
+                  - cat
+                  - /tmp/healthy
+    asserts:
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].livenessProbe
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].livenessProbe
+  - it: should return correct liveness probes for all containers
     values:
       - ./values/cj-only.yaml
     asserts:
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].livenessProbe
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].livenessProbe.exec
+          value:
+            command:
+              - cat
+              - /tmp/healthy
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].livenessProbe
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[1].livenessProbe.exec
+          value:
+            command:
+              - cat
+              - /tmp/healthy4
+  - it: should only return readiness probe for main container
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      cronSettings.schedule: "* * * * *"
+      readiness:
+        action:
+          exec:
+            command:
+              - cat
+              - /tmp/healthy
+      additionalContainers:
+        - name: secondary-container
+          imageName: nginx
+          imageTag: latest
+    asserts:
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].readinessProbe
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].readinessProbe
+  - it: should only return readiness probe for secondary container
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      cronSettings.schedule: "* * * * *"
+      additionalContainers:
+        - name: secondary-container
+          imageName: nginx
+          imageTag: latest
+          readiness:
+            action:
+              exec:
+                command:
+                  - cat
+                  - /tmp/healthy
+    asserts:
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].readinessProbe
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].readinessProbe
+  - it: should return correct readiness probes for all containers
+    values:
+      - ./values/cj-only.yaml
+    asserts:
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].readinessProbe
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].readinessProbe.exec
+          value:
+            command:
+              - cat
+              - /tmp/healthy2
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].readinessProbe
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[1].readinessProbe.exec
+          value:
+            command:
+              - cat
+              - /tmp/healthy5
+  - it: should only return startup probe for main container
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      cronSettings.schedule: "* * * * *"
+      startup:
+        action:
+          exec:
+            command:
+              - cat
+              - /tmp/healthy
+      additionalContainers:
+        - name: secondary-container
+          imageName: nginx
+          imageTag: latest
+    asserts:
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].startupProbe
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].startupProbe
+  - it: should only return startup probe for secondary container
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      cronSettings.schedule: "* * * * *"
+      additionalContainers:
+        - name: secondary-container
+          imageName: nginx
+          imageTag: latest
+          startup:
+            action:
+              exec:
+                command:
+                  - cat
+                  - /tmp/healthy
+    asserts:
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].startupProbe
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].startupProbe
+  - it: should return correct startup probes for all containers
+    values:
+      - ./values/cj-only.yaml
+    asserts:
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[0].startupProbe
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].startupProbe.exec
+          value:
+            command:
+              - cat
+              - /tmp/healthy3
+      - isNotNull:
+          path: spec.jobTemplate.spec.template.spec.containers[1].startupProbe
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[1].startupProbe.exec
+          value:
+            command:
+              - cat
+              - /tmp/healthy6
+  - it: should ensure unnecessary configuration is excluded with minimal setup
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      cronSettings.schedule: "* * * * *"
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers
+          value:
+            - image: nginx:latest
+              imagePullPolicy: Always
+              name: RELEASE-NAME
       - isNull:
           path: spec.jobTemplate.spec.template.metadata.annotations
-      - isNull:
-          path: spec.jobTemplate.spec.template.spec.containers[0].env
-      - isNull:
-          path: spec.jobTemplate.spec.template.spec.containers[0].volumeMounts
-      - isNull:
-          path: spec.jobTemplate.spec.template.spec.containers[1].env
-      - isNull:
-          path: spec.jobTemplate.spec.template.spec.containers[1].volumeMounts
       - isNull:
           path: spec.jobTemplate.spec.template.spec.nodeSelector
       - isNull:
