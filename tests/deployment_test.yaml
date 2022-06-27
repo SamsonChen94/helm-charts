@@ -208,18 +208,8 @@ tests:
             - foo2
             - bar2
   - it: should return correct commands and arguments for all containers
-    set:
-      workload: deployment
-      imageName: nginx
-      imageTag: latest
-      command: /bin/bash
-      argument: test.sh foo bar
-      additionalContainers:
-        - name: secondary-container
-          imageName: nginx
-          imageTag: latest
-          command: /bin/sh
-          argument: test-2.sh foo2 bar2
+    values:
+      - ./values/deploy-only.yaml
     asserts:
       - equal:
           path: spec.template.spec.containers[0].command
