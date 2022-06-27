@@ -421,6 +421,94 @@ tests:
             command:
               - cat
               - /tmp/healthy6
+  - it: should return correct scheduling configuration, only node selector
+    set:
+      workload: deployment
+      imageName: nginx
+      imageTag: latest
+      scheduling:
+        nodeSelector:
+          labelKeyFromNode: labelValueFromNode
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            labelKeyFromNode: labelValueFromNode
+      - isNull:
+          path: spec.template.spec.tolerations
+      - isNull:
+          path: spec.template.spec.topologySpreadConstraints
+  - it: should return correct scheduling configuration, only toleration
+    set:
+      workload: deployment
+      imageName: nginx
+      imageTag: latest
+      scheduling:
+        taintToleration:
+          - effect: NO_SCHEDULE
+            key: foo
+            value: bar
+    asserts:
+      - isNull:
+          path: spec.template.spec.nodeSelector
+      - equal:
+          path: spec.template.spec.tolerations
+          value:
+            - effect: NO_SCHEDULE
+              key: foo
+              value: bar
+      - isNull:
+          path: spec.template.spec.topologySpreadConstraints
+  - it: should return correct scheduling configuration, only topology spread constraints
+    set:
+      workload: deployment
+      imageName: nginx
+      imageTag: latest
+      scheduling:
+        topology:
+          - maxSkew: 1
+            topologyKey: labelKeyFromNode
+            whenUnsatisfiable: DoNotSchedule
+            labelSelector:
+              matchLabels:
+                labelKeyFromPod: labelValueFromPod
+    asserts:
+      - isNull:
+          path: spec.template.spec.nodeSelector
+      - isNull:
+          path: spec.template.spec.tolerations
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints
+          value:
+            - maxSkew: 1
+              topologyKey: labelKeyFromNode
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  labelKeyFromPod: labelValueFromPod
+  - it: should return all (correct) scheduling configuration
+    values:
+      - ./values/deploy-only.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            labelKeyFromNode: labelValueFromNode
+      - equal:
+          path: spec.template.spec.tolerations
+          value:
+            - effect: NO_SCHEDULE
+              key: foo
+              value: bar
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints
+          value:
+            - maxSkew: 1
+              topologyKey: labelKeyFromNode
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  labelKeyFromPod: labelValueFromPod
   - it: should ensure unnecessary configuration is excluded with minimal setup
     set:
       imageName: nginx
@@ -442,6 +530,6 @@ tests:
       - isNull:
           path: spec.template.spec.tolerations
       - isNull:
-          path: spec.template.spec.topologySpreadConstraits
+          path: spec.template.spec.topologySpreadConstraints
       - isNull:
           path: spec.template.spec.volumes

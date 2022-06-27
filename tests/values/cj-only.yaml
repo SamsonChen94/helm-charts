@@ -51,6 +51,21 @@ startup:
   failureThreshold: 3
   successThreshold: 1
 
+scheduling:
+  nodeSelector:
+    labelKeyFromNode: labelValueFromNode
+  taintToleration:
+    - effect: NO_SCHEDULE
+      key: foo
+      value: bar
+  topology:
+    - maxSkew: 1
+      topologyKey: labelKeyFromNode
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          labelKeyFromPod: labelValueFromPod
+
 cronSettings:
   enabled: true
   schedule: 5 4 * * *

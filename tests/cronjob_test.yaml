@@ -463,6 +463,97 @@ tests:
             command:
               - cat
               - /tmp/healthy6
+  - it: should return correct scheduling configuration, only node selector
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      cronSettings.schedule: "* * * * *"
+      scheduling:
+        nodeSelector:
+          labelKeyFromNode: labelValueFromNode
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.nodeSelector
+          value:
+            labelKeyFromNode: labelValueFromNode
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.tolerations
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.topologySpreadConstraints
+  - it: should return correct scheduling configuration, only toleration
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      cronSettings.schedule: "* * * * *"
+      scheduling:
+        taintToleration:
+          - effect: NO_SCHEDULE
+            key: foo
+            value: bar
+    asserts:
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.nodeSelector
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.tolerations
+          value:
+            - effect: NO_SCHEDULE
+              key: foo
+              value: bar
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.topologySpreadConstraints
+  - it: should return correct scheduling configuration, only topology spread constraints
+    set:
+      workload: cronjob
+      imageName: nginx
+      imageTag: latest
+      cronSettings.schedule: "* * * * *"
+      scheduling:
+        topology:
+          - maxSkew: 1
+            topologyKey: labelKeyFromNode
+            whenUnsatisfiable: DoNotSchedule
+            labelSelector:
+              matchLabels:
+                labelKeyFromPod: labelValueFromPod
+    asserts:
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.nodeSelector
+      - isNull:
+          path: spec.jobTemplate.spec.template.spec.tolerations
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.topologySpreadConstraints
+          value:
+            - maxSkew: 1
+              topologyKey: labelKeyFromNode
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  labelKeyFromPod: labelValueFromPod
+  - it: should return all (correct) scheduling configuration
+    values:
+      - ./values/cj-only.yaml
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.nodeSelector
+          value:
+            labelKeyFromNode: labelValueFromNode
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.tolerations
+          value:
+            - effect: NO_SCHEDULE
+              key: foo
+              value: bar
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.topologySpreadConstraints
+          value:
+            - maxSkew: 1
+              topologyKey: labelKeyFromNode
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  labelKeyFromPod: labelValueFromPod
   - it: should ensure unnecessary configuration is excluded with minimal setup
     set:
       workload: cronjob
@@ -483,6 +574,6 @@ tests:
       - isNull:
           path: spec.jobTemplate.spec.template.spec.tolerations
       - isNull:
-          path: spec.jobTemplate.spec.template.spec.topologySpreadConstraits
+          path: spec.jobTemplate.spec.template.spec.topologySpreadConstraints
       - isNull:
           path: spec.jobTemplate.spec.template.spec.volumes
