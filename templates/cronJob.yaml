@@ -30,5 +30,9 @@ spec:
       {{- include "podSpecTemplate" . | indent 6 }}
   schedule: {{ required "\n\nError --> cronSettings.schedule required if workload is set to cronjob" $cron.schedule | quote }}
   successfulJobsHistoryLimit: {{ $cron.maxSucceedHistory | default 3 }}
-  suspend: {{ not $cron.enabled | default false }}
+  {{- if or ( eq $cron.enabled true ) ( eq $cron.enabled false ) }}
+  suspend: {{ not $cron.enabled }}
+  {{- else }}
+  suspend: false
+  {{- end }}
 {{- end }}
